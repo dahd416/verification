@@ -1,0 +1,34 @@
+[
+  {
+    "_id": "699ced7b15958e0c5e4087c6",
+    "organization_id": "7de4f4ac-589b-4b9b-8094-2db35e6f369d",
+    "site_description": "Plataforma de verificación de cursos impartidos",
+    "site_title": "ORVITI | Academy",
+    "favicon_url": "https://cert-studio-4.preview.emergentagent.com/api/uploads/8257789e-f00f-4a80-9a8a-41d5b96a8e48.png",
+    "login_logo_url": "https://cert-studio-4.preview.emergentagent.com/api/uploads/504c0d7e-06dc-44ce-97cf-2ca1da7de7c2.png",
+    "sidebar_logo_url": "https://cert-studio-4.preview.emergentagent.com/api/uploads/1be77c9b-1795-4c65-933c-510c5be90275.png",
+    "email_enabled": false,
+    "smtp_from_email": "",
+    "smtp_from_name": "",
+    "smtp_host": "smtp.gmail.com",
+    "smtp_password": "",
+    "smtp_port": "587",
+    "smtp_user": ""
+  },
+  {
+    "_id": "699dd9a031d0f7041baea9a0",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "email_enabled": false,
+    "smtp_from_email": "",
+    "smtp_from_name": "",
+    "smtp_host": "smtp.gmail.com",
+    "smtp_password": "",
+    "smtp_port": "587",
+    "smtp_user": "",
+    "site_description": "Plataforma de verificación de cursos impartidos",
+    "site_title": "ORVITI | Academy",
+    "favicon_url": "",
+    "login_logo_url": "",
+    "sidebar_logo_url": ""
+  }
+]

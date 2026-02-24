@@ -1,0 +1,42 @@
+[
+  {
+    "_id": "699af6d7eb3ffd4b526277ae",
+    "id": "1773d311-7b1e-489e-ba80-9989df4f9668",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "email": "admin@sety.com",
+    "password_hash": "$2b$12$ux3jioQ0ziYfdzXguZJbbewEoCfKFquTyvmzrlFxgM28LhtWuNcU.",
+    "name": "Admin User",
+    "role": "admin",
+    "created_at": "2026-02-22T12:30:15.402186+00:00"
+  },
+  {
+    "_id": "699b0039cb4c83da6d67dd91",
+    "id": "1918f7a4-38f2-4a16-b5b4-f8372745763f",
+    "organization_id": "7de4f4ac-589b-4b9b-8094-2db35e6f369d",
+    "email": "admin@orviti.com",
+    "password_hash": "$2b$12$GjJDbmDmmuJrEuSZD8skNOiM1K8nWSF6m6wSh.76.uK1/LIrkPmgq",
+    "name": "Admin",
+    "role": "admin",
+    "created_at": "2026-02-22T13:10:17.705503+00:00"
+  },
+  {
+    "_id": "699b0140cb4c83da6d67dd93",
+    "id": "1d51da19-7f68-4c51-86de-71da947a4130",
+    "organization_id": "ec041c8c-6e29-40b6-8860-e074bf83e599",
+    "email": "test_user_1779@orviti.com",
+    "password_hash": "$2b$12$I1/ilimiKSr11m5glFJWFuEl6LOMVje37hByFMpX6TjHZSJ9VoyhO",
+    "name": "Test User",
+    "role": "admin",
+    "created_at": "2026-02-22T13:14:40.744840+00:00"
+  },
+  {
+    "_id": "699dce68befe03c485aef8fa",
+    "id": "a461903b-0a06-4148-b654-085201af9c61",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "email": "test@orviti.com",
+    "password_hash": "$2b$12$PCNWwFnLA7m1ayUe33OtyOVxbnYvSb/8osZcl6E8yw5JAjS58jr0C",
+    "name": "Test User",
+    "role": "admin",
+    "created_at": "2026-02-24T16:14:32.650251+00:00"
+  }
+]

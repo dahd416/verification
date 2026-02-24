@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificado - {{ recipient_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;600&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Urbanist', 'Open Sans', sans-serif;
+            width: 297mm;
+            height: 210mm;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .certificate {
+            width: 287mm;
+            height: 200mm;
+            position: relative;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 50%, #f5f7ff 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.15);
+        }
+        
+        /* Decorative elements */
+        .corner-decoration {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+        }
+        
+        .corner-top-left {
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            border-bottom-right-radius: 100%;
+        }
+        
+        .corner-top-right {
+            top: 0;
+            right: 0;
+            background: linear-gradient(225deg, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            border-bottom-left-radius: 100%;
+        }
+        
+        .corner-bottom-left {
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(45deg, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            border-top-right-radius: 100%;
+        }
+        
+        .corner-bottom-right {
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(315deg, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+            border-top-left-radius: 100%;
+        }
+        
+        /* Border frame */
+        .border-frame {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 2px solid transparent;
+            border-image: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #6366f1 100%) 1;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        
+        /* Content container */
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 60px;
+            text-align: center;
+        }
+        
+        /* Organization */
+        .organization {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6366f1;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+        
+        /* Title */
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        
+        /* Recipient name */
+        .recipient-section {
+            margin: 25px 0;
+        }
+        
+        .presented-to {
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        
+        .recipient-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 600;
+            color: #1e1b4b;
+            padding-bottom: 10px;
+            border-bottom: 3px solid;
+            border-image: linear-gradient(90deg, transparent, #6366f1, #a855f7, #6366f1, transparent) 1;
+            display: inline-block;
+        }
+        
+        /* Course info */
+        .course-section {
+            margin: 25px 0;
+        }
+        
+        .for-completing {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+        
+        .course-name {
+            font-size: 22px;
+            font-weight: 600;
+            color: #312e81;
+            margin-bottom: 15px;
+        }
+        
+        .course-details {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 8px;
+        }
+        
+        .detail-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .detail-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #312e81;
+            margin-top: 4px;
+        }
+        
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            left: 60px;
+            right: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        
+        .signature-block {
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .signature-line {
+            width: 150px;
+            height: 50px;
+            border-bottom: 2px solid #6366f1;
+            margin-bottom: 8px;
+        }
+        
+        .signature-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e1b4b;
+        }
+        
+        .signature-title {
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .qr-section {
+            text-align: center;
+        }
+        
+        .qr-code {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 5px;
+        }
+        
+        .qr-label {
+            font-size: 9px;
+            color: #94a3b8;
+        }
+        
+        .certificate-id-section {
+            text-align: center;
+        }
+        
+        .certificate-id {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 6px 12px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+        
+        .issue-date {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate">
+        <!-- Decorative corners -->
+        <div class="corner-decoration corner-top-left"></div>
+        <div class="corner-decoration corner-top-right"></div>
+        <div class="corner-decoration corner-bottom-left"></div>
+        <div class="corner-decoration corner-bottom-right"></div>
+        
+        <!-- Border frame -->
+        <div class="border-frame"></div>
+        
+        <!-- Main content -->
+        <div class="content">
+            <div class="organization">{{ organization_name }}</div>
+            <h1 class="title">Certificado</h1>
+            <p class="subtitle">de Finalización</p>
+            
+            <div class="recipient-section">
+                <p class="presented-to">Este certificado se otorga a</p>
+                <h2 class="recipient-name">{{ recipient_name }}</h2>
+            </div>
+            
+            <div class="course-section">
+                <p class="for-completing">Por completar exitosamente el curso</p>
+                <h3 class="course-name">{{ course_name }}</h3>
+                
+                <div class="course-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Duración</span>
+                        <span class="detail-value">{{ duration_hours }} horas</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Instructor</span>
+                        <span class="detail-value">{{ instructor }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha</span>
+                        <span class="detail-value">{{ issue_date }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="signature-block">
+                <div class="signature-line"></div>
+                <div class="signature-name">{{ instructor }}</div>
+                <div class="signature-title">Instructor</div>
+            </div>
+            
+            <div class="qr-section">
+                <img class="qr-code" src="{{ qr_code_url }}" alt="QR Code">
+                <div class="qr-label">Escanear para verificar</div>
+            </div>
+            
+            <div class="certificate-id-section">
+                <div class="certificate-id">{{ certificate_id }}</div>
+                <div class="issue-date">Emitido: {{ issue_date }}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

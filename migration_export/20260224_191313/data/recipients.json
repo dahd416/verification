@@ -1,0 +1,101 @@
+[
+  {
+    "_id": "699af6d7eb3ffd4b526277b1",
+    "id": "de149920-617d-410a-8675-765123fc68af",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "2521e86b-7fe2-4cc5-8deb-16d104d3f50a",
+    "full_name": "Juan Pérez",
+    "email": "juan.perez@email.com",
+    "created_at": "2026-02-22T12:30:15.460067+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277b2",
+    "id": "cf3253c2-084d-4fc9-b43d-de79a71cbd53",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "2521e86b-7fe2-4cc5-8deb-16d104d3f50a",
+    "full_name": "Ana López",
+    "email": "ana.lopez@email.com",
+    "created_at": "2026-02-22T12:30:15.481634+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277b3",
+    "id": "c4b75c5e-8b3a-4b7e-8429-1f4889cc60f6",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "2521e86b-7fe2-4cc5-8deb-16d104d3f50a",
+    "full_name": "Carlos Rodríguez",
+    "email": "carlos.rodriguez@email.com",
+    "created_at": "2026-02-22T12:30:15.482268+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277b4",
+    "id": "8781467a-21ad-485c-8a89-688025ee9216",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "2521e86b-7fe2-4cc5-8deb-16d104d3f50a",
+    "full_name": "María Fernández",
+    "email": "maria.fernandez@email.com",
+    "created_at": "2026-02-22T12:30:15.482594+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277b5",
+    "id": "4cbdd6fc-b03d-40cf-8899-9b6e259bd401",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "2521e86b-7fe2-4cc5-8deb-16d104d3f50a",
+    "full_name": "Pedro Sánchez",
+    "email": "pedro.sanchez@email.com",
+    "created_at": "2026-02-22T12:30:15.482854+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277b6",
+    "id": "eb8c1799-51d6-40c7-a74c-757795b963e4",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "73c32063-35f4-41bf-9550-e84081f29468",
+    "full_name": "Juan Pérez",
+    "email": "juan.perez@email.com",
+    "created_at": "2026-02-22T12:30:15.483074+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277b7",
+    "id": "74dae3b9-31fd-4db4-b827-069e84e30ae5",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "73c32063-35f4-41bf-9550-e84081f29468",
+    "full_name": "Ana López",
+    "email": "ana.lopez@email.com",
+    "created_at": "2026-02-22T12:30:15.483334+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277b8",
+    "id": "22b1f29f-e30d-4a34-84e0-44e12a02181d",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "73c32063-35f4-41bf-9550-e84081f29468",
+    "full_name": "Carlos Rodríguez",
+    "email": "carlos.rodriguez@email.com",
+    "created_at": "2026-02-22T12:30:15.483717+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277b9",
+    "id": "556a0e26-f0c7-49a5-8891-b6112a16b498",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "73c32063-35f4-41bf-9550-e84081f29468",
+    "full_name": "María Fernández",
+    "email": "maria.fernandez@email.com",
+    "created_at": "2026-02-22T12:30:15.484079+00:00"
+  },
+  {
+    "_id": "699af6d7eb3ffd4b526277ba",
+    "id": "02f9a85e-2e6d-474e-a166-c09bf7a259aa",
+    "organization_id": "f955290a-1ddf-438f-91a0-a27bd35a7dad",
+    "course_id": "73c32063-35f4-41bf-9550-e84081f29468",
+    "full_name": "Pedro Sánchez",
+    "email": "pedro.sanchez@email.com",
+    "created_at": "2026-02-22T12:30:15.484366+00:00"
+  },
+  {
+    "_id": "699ce4df4b7f6faa5be8ab8f",
+    "id": "ac0600a7-0916-4193-bf4a-48e0978f2e58",
+    "organization_id": "7de4f4ac-589b-4b9b-8094-2db35e6f369d",
+    "course_id": "a593e6b7-a771-45a7-bfd9-d24e11309765",
+    "full_name": "Fernando Leyva",
+    "email": "fernando@orviti.com",
+    "created_at": "2026-02-23T23:38:07.270089+00:00"
+  }
+]

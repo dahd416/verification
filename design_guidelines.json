@@ -1,0 +1,181 @@
+{
+  "identity": {
+    "persona": "E1",
+    "mission": "Create a modern, glassmorphic certificate management platform that feels ethereal yet trustworthy.",
+    "principles": [
+      "Fusion over Imitation: Blend SaaS utility with art-gallery aesthetics.",
+      "Emotion First: The UI should feel 'light' and 'breezy', reducing the stress of administrative tasks.",
+      "Content is King: Certificate data is the hero; the UI is the frame.",
+      "Contrast: Soft glass backgrounds vs. sharp, high-contrast text for readability."
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "primary": "Urbanist, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+      "h2": "text-3xl font-semibold tracking-tight",
+      "h3": "text-2xl font-semibold",
+      "body": "text-base font-medium leading-relaxed",
+      "small": "text-sm font-medium text-muted-foreground",
+      "tiny": "text-xs font-semibold uppercase tracking-wider"
+    },
+    "usage_rules": [
+      "Headings: Urbanist Bold/Semibold. Use tight tracking.",
+      "Body: Urbanist Medium. Ensure high contrast against glass backgrounds.",
+      "Numbers/Data: Urbanist Bold or Mono for tabular data.",
+      "Avoid 'Inter' generic look. Urbanist has character; use it."
+    ]
+  },
+  "colors": {
+    "palette": {
+      "background": {
+        "base": "#f8fafc",
+        "gradient": "linear-gradient(135deg, #eef2ff 0%, #f3e8ff 100%)",
+        "glass": "rgba(255, 255, 255, 0.4)"
+      },
+      "primary": {
+        "main": "#6366f1",
+        "gradient": "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+        "foreground": "#ffffff"
+      },
+      "secondary": {
+        "main": "#a855f7",
+        "foreground": "#ffffff"
+      },
+      "accent": {
+        "gold": "#d4af37",
+        "gold_light": "#f0d878",
+        "purple": "#8b5cf6",
+        "blue": "#3b82f6"
+      },
+      "neutral": {
+        "slate_900": "#0f172a",
+        "slate_500": "#64748b",
+        "slate_200": "#e2e8f0"
+      },
+      "status": {
+        "success": "#10b981",
+        "warning": "#f59e0b",
+        "error": "#ef4444"
+      }
+    },
+    "theme_strategy": "Light Mode Glassmorphism",
+    "glassmorphism_tokens": {
+      "card_bg": "bg-white/40",
+      "card_border": "border-white/50",
+      "card_blur": "backdrop-blur-xl",
+      "card_shadow": "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
+      "input_bg": "bg-white/50",
+      "sidebar_bg": "bg-white/30"
+    }
+  },
+  "layout": {
+    "grid_system": "Bento Grid (CSS Grid)",
+    "spacing": "Relaxed. Use p-6 to p-8 for cards. Gap-6 for grids.",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "structure": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6",
+      "sidebar": "fixed left-0 top-0 h-full w-20 flex flex-col items-center py-8 z-50 glass-panel",
+      "main_content": "pl-24 pt-8 pb-12 pr-8 min-h-screen"
+    },
+    "z_index": {
+      "base": "z-0",
+      "glass_card": "z-10",
+      "dropdown": "z-40",
+      "sidebar": "z-50",
+      "modal": "z-50",
+      "toast": "z-50"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 hover:scale-[1.02] transition-all duration-300 rounded-full px-8 py-2 font-semibold",
+      "secondary": "bg-white/50 text-slate-700 hover:bg-white/80 border border-white/20 backdrop-blur-sm shadow-sm hover:shadow transition-all rounded-full px-6 py-2",
+      "ghost": "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-lg px-4 py-2 transition-colors",
+      "icon": "p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-white/60 transition-all"
+    },
+    "cards": {
+      "standard": "bg-white/40 backdrop-blur-md border border-white/60 shadow-sm rounded-2xl hover:shadow-md transition-shadow duration-300",
+      "interactive": "group cursor-pointer bg-white/40 backdrop-blur-md border border-white/60 hover:border-indigo-200/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl",
+      "highlight": "bg-gradient-to-br from-white/60 to-white/30 backdrop-blur-xl border border-white/80 shadow-lg rounded-2xl"
+    },
+    "inputs": {
+      "field": "bg-white/50 border-slate-200/60 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 rounded-xl px-4 py-2.5 outline-none transition-all placeholder:text-slate-400 backdrop-blur-sm",
+      "label": "text-sm font-medium text-slate-600 mb-1.5 block"
+    },
+    "navigation": {
+      "sidebar_item": "w-10 h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all mb-4 relative group",
+      "sidebar_active": "bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25"
+    },
+    "tables": {
+      "container": "rounded-2xl overflow-hidden border border-white/40 bg-white/20 backdrop-blur-sm",
+      "header": "bg-white/30 text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-white/40",
+      "row": "hover:bg-white/40 transition-colors border-b border-slate-100/50 last:border-0"
+    }
+  },
+  "visual_enhancers": {
+    "glass_effect": {
+      "classes": "bg-white/40 backdrop-blur-md border border-white/20",
+      "css": "background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2);"
+    },
+    "gradients": {
+      "background_mesh": "fixed inset-0 z-[-1] bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-indigo-100/50 via-purple-50/30 to-white"
+    },
+    "shadows": {
+      "soft": "0 8px 30px rgba(0,0,0,0.04)",
+      "glow": "0 0 20px rgba(99, 102, 241, 0.2)"
+    },
+    "borders": {
+      "subtle": "1px solid rgba(255,255,255,0.5)"
+    }
+  },
+  "motion": {
+    "transitions": "transition-all duration-300 ease-out",
+    "hover_lift": "hover:-translate-y-1",
+    "page_enter": "animate-fade-in-up",
+    "micro_interactions": {
+      "button_click": "active:scale-95",
+      "card_hover": "hover:shadow-lg hover:border-indigo-200/50"
+    }
+  },
+  "image_urls": {
+    "backgrounds": [
+      {
+        "url": "https://images.unsplash.com/photo-1771732267145-835666f3b291?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "category": "abstract_mesh",
+        "description": "Soft blue/purple gradient mesh for subtle background overlay"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1762951566442-af07db89ab1c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "category": "glass_accent",
+        "description": "Light refraction pattern for login/hero sections"
+      }
+    ],
+    "placeholders": {
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=",
+      "certificate_thumb": "https://images.unsplash.com/photo-1544257753-4a1622b7a99f?q=80&w=400&auto=format&fit=crop"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. GLOBAL STYLES: Update index.css to include the mesh gradient background on the body.",
+    "2. LAYOUT: Refactor the Layout component to use a fixed, icon-only sidebar on the left and a scrollable main content area.",
+    "3. DASHBOARD: Convert dashboard stats into 'Glass Cards'. Use the Bento grid layout.",
+    "4. COMPONENTS: heavily customize shadcn components. Remove default solid backgrounds and replace with 'bg-white/40' and 'backdrop-blur'.",
+    "5. BUTTONS: Replace all primary buttons with the 'Pill Gradient' style.",
+    "6. TABLES: Update data tables to be 'floating' - no outer border, but rounded corners and glass backgrounds.",
+    "7. CERTIFICATES: Keep the 'Gold' accents for the actual certificate rendering, but the UI around it should remain Blue/Purple glass.",
+    "8. ICONS: Use Lucide-react (already installed). Use stroke-width={1.5} for a lighter, elegant look.",
+    "9. CRITICAL: Ensure text contrast is sufficient on semi-transparent backgrounds. Use text-slate-900 for primary text.",
+    "10. THEME: Enforce Light Mode logic for the glass effect. Dark mode glass requires different opacity/colors (slate-900/40), but prioritize the Light/Lavender look first as requested."
+  ],
+  "universal_guidelines": [
+    "Do NOT use standard Shadcn cards without modification.",
+    "Do NOT use solid gray backgrounds for the app container.",
+    "ALWAYS add `data-testid` to interactive elements.",
+    "Use 'sonner' for notifications.",
+    "Respect the 'Urbanist' font family for all text."
+  ]
+}

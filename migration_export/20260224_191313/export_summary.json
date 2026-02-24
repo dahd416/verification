@@ -1,0 +1,16 @@
+{
+  "timestamp": "20260224_191313",
+  "source_db": "test_database",
+  "collections": {
+    "users": 4,
+    "organizations": 3,
+    "courses": 3,
+    "templates": 2,
+    "recipients": 11,
+    "diplomas": 8,
+    "email_templates": 8,
+    "settings": 2,
+    "scan_logs": 23
+  },
+  "uploads_count": 10
+}

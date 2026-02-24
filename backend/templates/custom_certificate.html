@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificado - {{ recipient_name }}</title>
+    <!-- Google Fonts - All categories -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&family=Manrope:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=Mulish:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Quicksand:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700&family=Karla:wght@300;400;500;600;700&family=Cabin:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Oswald:wght@300;400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=Lexend:wght@300;400;500;600;700&family=Albert+Sans:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Red+Hat+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&family=Merriweather:wght@300;400;700&family=Lora:wght@400;500;600;700&family=Crimson+Text:wght@400;600;700&family=PT+Serif:wght@400;700&family=Source+Serif+4:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600;700&family=EB+Garamond:wght@400;500;600;700&family=Cinzel:wght@400;500;600;700&family=Bitter:wght@300;400;500;600;700&family=Domine:wght@400;500;600;700&family=Spectral:wght@300;400;500;600;700&family=Alegreya:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@300;400;500;700&family=Vollkorn:wght@400;500;600;700&family=Cardo:wght@400;700&family=Noto+Serif:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@300;400;500;600;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Abril+Fatface&family=Righteous&family=Alfa+Slab+One&family=Fredoka:wght@400;500;600;700&family=Pacifico&family=Lobster&family=Permanent+Marker&family=Satisfy&family=Cookie&family=Courgette&family=Great+Vibes&family=Sacramento&family=Tangerine:wght@400;700&family=Kaushan+Script&family=Allura&family=Alex+Brush&family=Pinyon+Script&family=Marck+Script&family=Rouge+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Caveat:wght@400;500;600;700&family=Kalam:wght@300;400;700&family=Indie+Flower&family=Shadows+Into+Light&family=Amatic+SC:wght@400;700&family=Handlee&family=Patrick+Hand&family=Gloria+Hallelujah&family=Architects+Daughter&family=Coming+Soon&family=Covered+By+Your+Grace&family=Rock+Salt&family=Reenie+Beanie&family=Just+Another+Hand&family=Nothing+You+Could+Do&family=Cedarville+Cursive&family=La+Belle+Aurore&family=Sue+Ellen+Francisco&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&family=Source+Code+Pro:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Roboto+Mono:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Ubuntu+Mono:wght@400;700&family=Inconsolata:wght@300;400;500;600;700&family=Anonymous+Pro:wght@400;700&family=Cousine:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Urbanist', sans-serif;
+            width: {{ canvas_width }}px;
+            height: {{ canvas_height }}px;
+            position: relative;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .certificate-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+        
+        .field {
+            position: absolute;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        .qr-code {
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-container">
+        {% if background_image_url %}
+        <img class="background-image" src="{{ background_image_url }}" alt="Background" />
+        {% endif %}
+        
+        {% for field in fields %}
+        <div class="field" style="
+            left: {{ field.x }}px;
+            top: {{ field.y }}px;
+            {% if field.width %}width: {{ field.width }}px;{% endif %}
+            {% if field.height %}height: {{ field.height }}px;{% endif %}
+            font-family: '{{ field.fontFamily }}', sans-serif;
+            font-size: {{ field.fontSize }}px;
+            color: {{ field.fontColor }};
+            {% if field.bold %}font-weight: bold;{% endif %}
+            {% if field.italic %}font-style: italic;{% endif %}
+            {% if field.underline %}text-decoration: underline;{% endif %}
+            text-align: {{ field.align }};
+            {% if field.rotation %}transform: rotate({{ field.rotation }}deg); transform-origin: center center;{% endif %}
+            opacity: {{ field.opacity }};
+        ">
+            {% if field.type == 'qr_code' %}
+            <img class="qr-code" src="{{ field.value }}" alt="QR Code" style="
+                width: {{ field.qrSize or field.width or 100 }}px; 
+                height: {{ field.qrSize or field.height or 100 }}px;
+                background: transparent;
+            " />
+            {% elif field.type == 'image' %}
+            <img src="{{ field.imageUrl }}" alt="Image" style="
+                width: {{ field.imageWidth or 150 }}px; 
+                height: {{ field.imageHeight or 150 }}px;
+                object-fit: contain;
+            " />
+            {% else %}
+            {{ field.value }}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
