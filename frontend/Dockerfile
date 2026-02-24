@@ -1,11 +1,12 @@
 # Stage 1: Build the React application
-FROM node:18-alpine as build-stage
+FROM node:20-alpine as build-stage
 
 WORKDIR /app/frontend
 
 # Copy package files and install dependencies
 COPY package.json yarn.lock* ./
-RUN yarn install --frozen-lockfile || npm install
+RUN yarn install --frozen-lockfile --ignore-engines || npm install --legacy-peer-deps
+
 
 # Copy all files and build
 COPY . .
