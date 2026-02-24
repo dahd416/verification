@@ -22,20 +22,34 @@ Esta guía te ayudará a desplegar la plataforma ORVITI utilizando Easypanel.
 
 #### B. API (Backend)
 - Haz clic en **"Add Service"** -> **"App"**.
-- Elige la fuente (GitHub/Git) y apunta a la carpeta `./backend` o usa el `Dockerfile` que hemos creado.
-- **Variables de Entorno:** Configura las siguientes variables en la pestaña "Env Vars":
-  - `MONGO_URL`: La URL de conexión de la base de datos MongoDB creada anteriormente.
+- En la pestaña **"Source"** (Github):
+  - **Owner**: `dahd416`
+  - **Repository**: `verification`
+  - **Branch**: `master`
+  - **Ruta de compilación**: `/backend`  <-- **¡CRÍTICO!** Cambia `/` por `/backend`
+- En la pestaña **"Build"**:
+  - **Tipo de Compilación**: `Dockerfile`
+  - **Archivo**: `Dockerfile` (Ya no necesitas poner backend/Dockerfile si la ruta es /backend)
+- **Variables de Entorno:** Configura las siguientes en la pestaña "Env Vars":
+  - `MONGO_URL`: La URL de conexión de MongoDB de Easypanel.
   - `DB_NAME`: `orviti_production`
-  - `JWT_SECRET`: Una cadena larga y aleatoria.
-  - `FRONTEND_URL`: La URL final de tu dominio (ej. `https://academia.tudominio.com`).
-  - `CORS_ORIGINS`: La misma URL del frontend.
+  - `JWT_SECRET`: Una clave larga aleatoria.
 - **Puertos:** Configura el puerto de escucha como `8001`.
 
 #### C. Web (Frontend)
 - Haz clic en **"Add Service"** -> **"App"**.
-- Apunta a la carpeta `./frontend` o usa el `Dockerfile` de React.
+- En la pestaña **"Source"** (Github):
+  - **Owner**: `dahd416`
+  - **Repository**: `verification`
+  - **Branch**: `master`
+  - **Ruta de compilación**: `/frontend` <-- **¡CRÍTICO!** Cambia `/` por `/frontend`
+- En la pestaña **"Build"**:
+  - **Tipo de Compilación**: `Dockerfile`
+  - **Archivo**: `Dockerfile`
 - **Variables de Entorno:**
   - `REACT_APP_BACKEND_URL`: La URL pública de tu API (ej. `https://api.tudominio.com`).
+
+
 - **Puertos:** Easypanel mapeará automáticamente el puerto `80` del contenedor al dominio que elijas.
 
 ### 3. Configurar Dominios
