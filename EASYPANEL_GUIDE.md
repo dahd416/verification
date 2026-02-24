@@ -26,10 +26,10 @@ Esta guía te ayudará a desplegar la plataforma ORVITI utilizando Easypanel.
   - **Owner**: `dahd416`
   - **Repository**: `verification`
   - **Branch**: `master`
-  - **Ruta de compilación**: `/backend`  <-- **¡CRÍTICO!** Cambia `/` por `/backend`
+  - **Ruta de compilación**: `/backend`  <-- **¡CRÍTICO!**
 - En la pestaña **"Build"**:
   - **Tipo de Compilación**: `Dockerfile`
-  - **Archivo**: `Dockerfile` (Ya no necesitas poner backend/Dockerfile si la ruta es /backend)
+  - **Archivo**: `Dockerfile`  <-- **¡CRÍTICO!** (No pongas "backend/Dockerfile", solo "Dockerfile")
 - **Variables de Entorno:** Configura las siguientes en la pestaña "Env Vars":
   - `MONGO_URL`: La URL de conexión de MongoDB de Easypanel.
   - `DB_NAME`: `orviti_production`
@@ -42,12 +42,13 @@ Esta guía te ayudará a desplegar la plataforma ORVITI utilizando Easypanel.
   - **Owner**: `dahd416`
   - **Repository**: `verification`
   - **Branch**: `master`
-  - **Ruta de compilación**: `/frontend` <-- **¡CRÍTICO!** Cambia `/` por `/frontend`
+  - **Ruta de compilación**: `/frontend` <-- **¡CRÍTICO!**
 - En la pestaña **"Build"**:
   - **Tipo de Compilación**: `Dockerfile`
-  - **Archivo**: `Dockerfile`
+  - **Archivo**: `Dockerfile` <-- **¡CRÍTICO!**
 - **Variables de Entorno:**
   - `REACT_APP_BACKEND_URL`: La URL pública de tu API (ej. `https://api.tudominio.com`).
+
 
 
 - **Puertos:** Easypanel mapeará automáticamente el puerto `80` del contenedor al dominio que elijas.
