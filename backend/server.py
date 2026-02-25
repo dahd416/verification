@@ -22,6 +22,13 @@ import base64
 import aiofiles
 import asyncio
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -2495,6 +2502,8 @@ async def root():
     return {"message": "ORVITI Academy API", "version": "1.0.0"}
 
 # Include the router in the main app
+
+# Include the router in the main app
 app.include_router(api_router)
 
 app.add_middleware(
@@ -2504,13 +2513,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
