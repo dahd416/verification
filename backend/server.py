@@ -278,16 +278,19 @@ async def register(data: UserCreate):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
-    logger.info(f"Login attempt for: {data.email}")
-    user = await db.users.find_one({"email": data.email}, {"_id": 0})
+    email = data.email.strip().lower()
+    logger.info(f"Login attempt for: {email}")
+    user = await db.users.find_one({"email": email}, {"_id": 0})
     logger.info(f"User found: {user is not None}")
     if not user:
+        logger.warning(f"User not found in DB: {email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     password_valid = verify_password(data.password, user["password_hash"])
     logger.info(f"Password valid: {password_valid}")
     
     if not password_valid:
+        logger.warning(f"Invalid password for: {email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_token(user["id"], user["organization_id"])
@@ -2497,9 +2500,32 @@ async def check_first_user():
 
 # ==================== ROOT ====================
 
+@api_router.get("/health")
+async def health_check():
+    try:
+        # Check DB connection
+        await client.admin.command('ping')
+        
+        # Check user count
+        user_count = await db.users.count_documents({})
+        
+        return {
+            "status": "ok",
+            "database": os.environ.get('DB_NAME'),
+            "users_in_db": user_count,
+            "api_version": "1.0.1"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "database": os.environ.get('DB_NAME')
+        }
+
 @api_router.get("/")
 async def root():
-    return {"message": "ORVITI Academy API", "version": "1.0.0"}
+    return {"message": "ORVITI Academy API", "version": "1.0.1"}
+
 
 # Include the router in the main app
 
