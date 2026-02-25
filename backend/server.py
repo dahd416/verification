@@ -719,7 +719,8 @@ async def generate_diplomas(data: DiplomaCreate, user: dict = Depends(get_curren
     )
     
     generated = []
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://cert-studio-4.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', '')
+
     
     for recipient_id in data.recipient_ids:
         recipient = await db.recipients.find_one(
@@ -951,7 +952,8 @@ async def send_diploma_email(diploma_id: str, user: dict = Depends(get_current_u
                 qr_dot_style = field_config.get("qrDotStyle", "squares")
                 qr_error_level = field_config.get("qrErrorLevel", "M")
                 
-                verification_url = f"{os.environ.get('FRONTEND_URL', 'https://cert-studio-4.preview.emergentagent.com')}/verify/{diploma['certificate_id']}"
+                verification_url = f"{os.environ.get('FRONTEND_URL', '')}/verify/{diploma['certificate_id']}"
+
                 field["value"] = generate_qr_code(
                     verification_url, 
                     fill_color=qr_color, 
@@ -1435,7 +1437,8 @@ async def download_diploma_pdf(diploma_id: str, user: dict = Depends(get_current
                 qr_error_level = field_config.get("qrErrorLevel", "M")
                 
                 # Generate QR with custom styling
-                verification_url = f"{os.environ.get('FRONTEND_URL', 'https://cert-studio-4.preview.emergentagent.com')}/verify/{diploma['certificate_id']}"
+                verification_url = f"{os.environ.get('FRONTEND_URL', '')}/verify/{diploma['certificate_id']}"
+
                 field["value"] = generate_qr_code(
                     verification_url, 
                     fill_color=qr_color, 
@@ -1580,7 +1583,8 @@ async def download_diploma_pdf_public(certificate_id: str):
                 qr_error_level = field_config.get("qrErrorLevel", "M")
                 
                 # Generate QR with custom styling
-                verification_url = f"{os.environ.get('FRONTEND_URL', 'https://cert-studio-4.preview.emergentagent.com')}/verify/{diploma['certificate_id']}"
+                verification_url = f"{os.environ.get('FRONTEND_URL', '')}/verify/{diploma['certificate_id']}"
+
                 field["value"] = generate_qr_code(
                     verification_url, 
                     fill_color=qr_color, 
