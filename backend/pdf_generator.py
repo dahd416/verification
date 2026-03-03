@@ -45,7 +45,13 @@ class CertificatePDFGenerator:
             self._playwright = await async_playwright().start()
             self._browser = await self._playwright.chromium.launch(
                 headless=True,
-                args=['--no-sandbox', '--disable-setuid-sandbox']
+                args=[
+                    '--no-sandbox', 
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage', # Crucial for Docker/VPS
+                    '--disable-gpu',
+                    '--no-zygote'
+                ]
             )
             logger.info("Playwright browser launched")
         return self._browser

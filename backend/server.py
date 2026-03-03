@@ -1523,6 +1523,37 @@ async def download_diploma_pdf(diploma_id: str, user: dict = Depends(get_current
         logger.error(f"PDF generation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
 
+@api_router.get("/debug/playwright")
+async def debug_playwright(user: dict = Depends(get_current_user)):
+    """Debug endpoint to test if Playwright can launch in this environment"""
+    from pdf_generator import get_pdf_generator
+    try:
+        logger.info("DEBUG: Attempting to launch Playwright...")
+        pdf_gen = await get_pdf_generator()
+        browser = await pdf_gen._get_browser()
+        version = browser.version
+        
+        # Try a simple page load
+        page = await browser.new_page()
+        await page.set_content("<h1>Playwright is working</h1>")
+        await page.close()
+        
+        return {
+            "status": "success",
+            "message": "Playwright launched successfully",
+            "browser_version": version,
+            "pw_browsers_path": os.environ.get('PLAYWRIGHT_BROWSERS_PATH', 'not set')
+        }
+    except Exception as e:
+        import traceback
+        logger.error(f"DEBUG Playwright failed: {str(e)}", exc_info=True)
+        return {
+            "status": "error",
+            "message": str(e),
+            "traceback": traceback.format_exc(),
+            "pw_browsers_path": os.environ.get('PLAYWRIGHT_BROWSERS_PATH', 'not set')
+        }
+
 @api_router.get("/diplomas/by-certificate/{certificate_id}/download-pdf")
 async def download_diploma_pdf_public(certificate_id: str):
     """Generate and download diploma as PDF (public endpoint for verification page)"""

@@ -93,7 +93,7 @@ const Diplomas = () => {
       if (filters.course_id !== 'all') params.course_id = filters.course_id;
       if (filters.status !== 'all') params.status = filters.status;
       if (filters.search) params.search = filters.search;
-      
+
       const response = await diplomasAPI.getAll(params);
       setDiplomas(response.data);
       setSelectedDiplomas([]);
@@ -160,7 +160,7 @@ const Diplomas = () => {
     setDownloadingId(diploma.id);
     try {
       const response = await diplomasAPI.downloadPdf(diploma.id);
-      
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -170,11 +170,25 @@ const Diplomas = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       toast.success(t('diplomas.downloadSuccess'));
     } catch (error) {
       console.error('Download error:', error);
-      toast.error(t('diplomas.downloadError'));
+
+      // Try to parse error message from blob if available
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const errorData = JSON.parse(text);
+          console.error('Server error details:', errorData);
+          toast.error(errorData.detail || t('diplomas.downloadError'));
+        } catch (e) {
+          toast.error(t('diplomas.downloadError'));
+        }
+      } else {
+        const errorMsg = error.response?.data?.detail || t('diplomas.downloadError');
+        toast.error(errorMsg);
+      }
     } finally {
       setDownloadingId(null);
     }
@@ -186,9 +200,9 @@ const Diplomas = () => {
       const response = await diplomasAPI.sendEmail(diploma.id);
       toast.success(t('diplomas.emailSent'));
       // Update diploma email_sent status
-      setDiplomas(diplomas.map(d => 
-        d.id === diploma.id 
-          ? { ...d, email_sent: true, email_sent_at: response.data.email_sent_at } 
+      setDiplomas(diplomas.map(d =>
+        d.id === diploma.id
+          ? { ...d, email_sent: true, email_sent_at: response.data.email_sent_at }
           : d
       ));
     } catch (error) {
@@ -218,29 +232,29 @@ const Diplomas = () => {
 
   const handleBulkSendEmail = async () => {
     if (selectedDiplomas.length === 0) return;
-    
+
     setSendingBulk(true);
     try {
       const response = await diplomasAPI.sendBulkEmail(selectedDiplomas);
       const { sent, failed } = response.data;
-      
+
       if (sent > 0) {
         toast.success(t('diplomas.bulkEmailSent', { count: sent }));
         // Update email_sent status for sent diplomas
         const sentIds = response.data.results
           .filter(r => r.success)
           .map(r => r.id);
-        setDiplomas(diplomas.map(d => 
-          sentIds.includes(d.id) 
-            ? { ...d, email_sent: true, email_sent_at: new Date().toISOString() } 
+        setDiplomas(diplomas.map(d =>
+          sentIds.includes(d.id)
+            ? { ...d, email_sent: true, email_sent_at: new Date().toISOString() }
             : d
         ));
       }
-      
+
       if (failed > 0) {
         toast.error(t('diplomas.bulkEmailFailed', { count: failed }));
       }
-      
+
       setSelectedDiplomas([]);
     } catch (error) {
       console.error('Bulk email error:', error);
@@ -273,7 +287,7 @@ const Diplomas = () => {
           <p className="text-slate-500 mt-1">{t('diplomas.subtitle')}</p>
         </div>
         {selectedDiplomas.length > 0 && (
-          <Button 
+          <Button
             className="btn-gradient"
             onClick={handleBulkSendEmail}
             disabled={sendingBulk}
@@ -307,7 +321,7 @@ const Diplomas = () => {
               {t('common.search')}
             </Button>
           </form>
-          
+
           <div className="flex gap-3">
             <Select
               value={filters.course_id}
@@ -435,7 +449,7 @@ const Diplomas = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="glass-card border-white/40">
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => handleDownloadPdf(diploma)}
                             disabled={downloadingId === diploma.id}
                           >
@@ -446,7 +460,7 @@ const Diplomas = () => {
                             )}
                             {t('diplomas.downloadPdf')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => handleSendEmail(diploma)}
                             disabled={sendingEmailId === diploma.id}
                             data-testid={`send-email-${diploma.id}`}
@@ -518,9 +532,9 @@ const Diplomas = () => {
         <AlertDialogContent className="glass-card border-white/40">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {actionDialog?.type === 'revoke' 
-                ? t('diplomas.revokeTitle') 
-                : actionDialog?.type === 'delete' 
+              {actionDialog?.type === 'revoke'
+                ? t('diplomas.revokeTitle')
+                : actionDialog?.type === 'delete'
                   ? t('diplomas.deleteTitle')
                   : t('diplomas.reactivateTitle')}
             </AlertDialogTitle>
@@ -544,13 +558,13 @@ const Diplomas = () => {
                   handleReactivate(actionDialog.id);
                 }
               }}
-              className={actionDialog?.type === 'revoke' || actionDialog?.type === 'delete' 
-                ? 'bg-red-500 text-white hover:bg-red-600' 
+              className={actionDialog?.type === 'revoke' || actionDialog?.type === 'delete'
+                ? 'bg-red-500 text-white hover:bg-red-600'
                 : 'btn-gradient'}
               data-testid="confirm-action-btn"
             >
-              {actionDialog?.type === 'revoke' 
-                ? t('diplomas.revoke') 
+              {actionDialog?.type === 'revoke'
+                ? t('diplomas.revoke')
                 : actionDialog?.type === 'delete'
                   ? t('common.delete')
                   : t('diplomas.reactivate')}
