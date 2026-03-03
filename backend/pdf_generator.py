@@ -11,9 +11,9 @@ from jinja2 import Environment, FileSystemLoader
 from playwright.async_api import async_playwright
 
 # Set Playwright browsers path
-os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
-
-logger = logging.getLogger(__name__)
+# Check Playwright browsers path
+pw_path = os.environ.get('PLAYWRIGHT_BROWSERS_PATH')
+logger.info(f"Using PLAYWRIGHT_BROWSERS_PATH: {pw_path or 'default'}")
 
 class CertificatePDFGenerator:
     """Service for generating PDF certificates using Playwright"""
