@@ -73,19 +73,15 @@ def get_s3_client():
         logger.info(f"S3 client initialized: bucket={S3_BUCKET}, region={S3_REGION}")
     return _s3_client
 
-def s3_public_url(key: str) -> str:
-    """Build the public URL for an S3 object."""
-    if S3_CUSTOM_DOMAIN:
-        domain = S3_CUSTOM_DOMAIN.rstrip('/')
-        return f"{domain}/{key}"
-    if S3_ENDPOINT_URL:
-        # For Cloudflare R2 / custom endpoint
-        endpoint = S3_ENDPOINT_URL.rstrip('/')
-        return f"{endpoint}/{S3_BUCKET}/{key}"
-    return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+def s3_proxy_url(key: str) -> str:
+    """Return a backend-proxied URL for the S3 object.
+    This keeps the bucket private — the browser never talks to MinIO directly.
+    The actual fetch is done in the /api/media/ endpoint with S3 credentials.
+    """
+    return f"/api/media/{key}"
 
 if S3_BUCKET:
-    logger.info(f"S3 storage enabled: bucket={S3_BUCKET}")
+    logger.info(f"S3 storage enabled (private proxy mode): bucket={S3_BUCKET}")
 else:
     logger.info("S3 not configured — using local file storage")
 
@@ -2158,7 +2154,7 @@ async def upload_file(file: UploadFile = File(...), user: dict = Depends(get_cur
                 # ACL only needed for public AWS S3 (not Cloudflare R2)
                 **({'ACL': 'public-read'} if not S3_ENDPOINT_URL else {}),
             )
-            url = s3_public_url(key)
+            url = s3_proxy_url(key)
             logger.info(f"File uploaded to S3: {key}")
             return {"url": url, "filename": filename, "storage": "s3"}
         except Exception as e:
@@ -2182,6 +2178,42 @@ async def get_upload(filename: str):
     if filename.lower().endswith('.svg'):
         media_type = 'image/svg+xml'
     return FileResponse(filepath, media_type=media_type)
+
+# ── MinIO/S3 Proxy ──────────────────────────────────────────────────────────
+# Serves private S3/MinIO files through the backend using its credentials.
+# The browser only talks to this endpoint — MinIO stays private.
+@api_router.get("/media/{key:path}")
+async def proxy_s3_media(key: str):
+    """Proxy a private S3/MinIO object to the browser."""
+    s3 = get_s3_client()
+    if not s3:
+        raise HTTPException(status_code=404, detail="S3 not configured")
+    try:
+        response = s3.get_object(Bucket=S3_BUCKET, Key=key)
+        content_type = response.get('ContentType', 'application/octet-stream')
+        body = response['Body']
+
+        def iter_content():
+            while True:
+                chunk = body.read(65536)  # 64KB chunks
+                if not chunk:
+                    break
+                yield chunk
+
+        from fastapi.responses import StreamingResponse as SR
+        return SR(
+            iter_content(),
+            media_type=content_type,
+            headers={
+                'Cache-Control': 'public, max-age=31536000',  # cache 1 year
+                'Content-Length': str(response.get('ContentLength', '')),
+            }
+        )
+    except s3.exceptions.NoSuchKey:
+        raise HTTPException(status_code=404, detail="File not found")
+    except Exception as e:
+        logger.error(f"S3 proxy error for key={key}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve file")
 
 # ==================== SEED DATA ====================
 
