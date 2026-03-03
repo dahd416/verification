@@ -42,9 +42,52 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'orviti-academy-secret-key-2024')
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
-# Create uploads directory
+# Create uploads directory (used as fallback when S3 is not configured)
 UPLOADS_DIR = ROOT_DIR / "uploads"
 UPLOADS_DIR.mkdir(exist_ok=True)
+
+# ==================== S3 STORAGE ==================== 
+# If S3_BUCKET_NAME is set, all uploads go to S3.
+# Otherwise falls back to local filesystem.
+_s3_client = None
+S3_BUCKET = os.environ.get('S3_BUCKET_NAME', '')
+S3_REGION = os.environ.get('S3_REGION', 'us-east-1')
+S3_ACCESS_KEY = os.environ.get('S3_ACCESS_KEY_ID', '')
+S3_SECRET_KEY = os.environ.get('S3_SECRET_ACCESS_KEY', '')
+S3_CUSTOM_DOMAIN = os.environ.get('S3_CUSTOM_DOMAIN', '')  # optional CDN/custom domain
+S3_ENDPOINT_URL = os.environ.get('S3_ENDPOINT_URL', '')    # for S3-compatible providers (Cloudflare R2, etc.)
+
+def get_s3_client():
+    """Get or create the boto3 S3 client (lazy init)."""
+    global _s3_client
+    if _s3_client is None and S3_BUCKET:
+        import boto3
+        kwargs = {
+            'region_name': S3_REGION,
+            'aws_access_key_id': S3_ACCESS_KEY,
+            'aws_secret_access_key': S3_SECRET_KEY,
+        }
+        if S3_ENDPOINT_URL:
+            kwargs['endpoint_url'] = S3_ENDPOINT_URL
+        _s3_client = boto3.client('s3', **kwargs)
+        logger.info(f"S3 client initialized: bucket={S3_BUCKET}, region={S3_REGION}")
+    return _s3_client
+
+def s3_public_url(key: str) -> str:
+    """Build the public URL for an S3 object."""
+    if S3_CUSTOM_DOMAIN:
+        domain = S3_CUSTOM_DOMAIN.rstrip('/')
+        return f"{domain}/{key}"
+    if S3_ENDPOINT_URL:
+        # For Cloudflare R2 / custom endpoint
+        endpoint = S3_ENDPOINT_URL.rstrip('/')
+        return f"{endpoint}/{S3_BUCKET}/{key}"
+    return f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{key}"
+
+if S3_BUCKET:
+    logger.info(f"S3 storage enabled: bucket={S3_BUCKET}")
+else:
+    logger.info("S3 not configured — using local file storage")
 
 # Create the main app
 app = FastAPI(title="ORVITI Academy API")
@@ -2091,31 +2134,53 @@ async def clear_scan_logs(user: dict = Depends(get_current_user)):
 
 @api_router.post("/upload")
 async def upload_file(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
-    # Generate unique filename
-    ext = Path(file.filename).suffix
+    """Upload a file to S3 (if configured) or local storage."""
+    ext = Path(file.filename).suffix.lower()
     filename = f"{uuid.uuid4()}{ext}"
-    filepath = UPLOADS_DIR / filename
-    
-    # Save file
-    async with aiofiles.open(filepath, 'wb') as f:
-        content = await file.read()
-        await f.write(content)
-    
-    # Return URL
-    return {"url": f"/api/uploads/{filename}", "filename": filename}
+    content = await file.read()
 
-# Serve uploaded files
+    s3 = get_s3_client()
+    if s3 and S3_BUCKET:
+        # ── S3 path ──
+        try:
+            content_type_map = {
+                '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+                '.gif': 'image/gif', '.webp': 'image/webp',
+                '.svg': 'image/svg+xml', '.pdf': 'application/pdf',
+            }
+            content_type = content_type_map.get(ext, 'application/octet-stream')
+            key = f"uploads/{filename}"
+            s3.put_object(
+                Bucket=S3_BUCKET,
+                Key=key,
+                Body=content,
+                ContentType=content_type,
+                # ACL only needed for public AWS S3 (not Cloudflare R2)
+                **({'ACL': 'public-read'} if not S3_ENDPOINT_URL else {}),
+            )
+            url = s3_public_url(key)
+            logger.info(f"File uploaded to S3: {key}")
+            return {"url": url, "filename": filename, "storage": "s3"}
+        except Exception as e:
+            logger.error(f"S3 upload failed, falling back to local: {e}")
+            # Fall through to local storage
+
+    # ── Local fallback ──
+    filepath = UPLOADS_DIR / filename
+    async with aiofiles.open(filepath, 'wb') as f:
+        await f.write(content)
+    logger.info(f"File saved locally: {filename}")
+    return {"url": f"/api/uploads/{filename}", "filename": filename, "storage": "local"}
+
+# Serve locally-stored files (used when S3 is not configured or as fallback)
 @api_router.get("/uploads/{filename}")
 async def get_upload(filename: str):
     filepath = UPLOADS_DIR / filename
     if not filepath.exists():
         raise HTTPException(status_code=404, detail="File not found")
-    
-    # Set correct media type for SVG
     media_type = None
     if filename.lower().endswith('.svg'):
         media_type = 'image/svg+xml'
-    
     return FileResponse(filepath, media_type=media_type)
 
 # ==================== SEED DATA ====================
