@@ -109,11 +109,28 @@ class CertificatePDFGenerator:
                     'height': 794
                 })
                 
-                # Set HTML content
-                await page.set_content(html_content, wait_until='load')
+                # Set HTML content and wait for DOM to load
+                await page.set_content(html_content, wait_until='domcontentloaded')
                 
-                # Wait a bit for fonts/background to potentially load
-                await asyncio.sleep(1.0)
+                # Wait for all images to fully load (including data: URLs)
+                # This JS waits until every <img> tag is decoded
+                await page.evaluate("""
+                    async () => {
+                        const imgs = Array.from(document.images);
+                        await Promise.all(imgs.map(img => {
+                            if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
+                            return new Promise((resolve, reject) => {
+                                img.addEventListener('load', resolve);
+                                img.addEventListener('error', resolve); // resolve even on error
+                                // Timeout after 5s per image
+                                setTimeout(resolve, 5000);
+                            });
+                        }));
+                    }
+                """)
+                
+                # Extra buffer for fonts
+                await asyncio.sleep(1.5)
                 
                 # Generate PDF with specific options
                 await page.pdf(
