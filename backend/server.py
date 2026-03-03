@@ -1495,9 +1495,12 @@ async def download_diploma_pdf(diploma_id: str, user: dict = Depends(get_current
         certificate_data["canvas_height"] = template.get("canvas_height", 794)
     
     # Generate PDF
-    pdf_generator = await get_pdf_generator()
     try:
+        logger.info(f"Generating PDF for diploma {diploma_id} with certificate_id {diploma['certificate_id']}")
+        pdf_generator = await get_pdf_generator()
         pdf_path = await pdf_generator.generate_certificate_pdf(certificate_data)
+        
+        logger.info(f"PDF generated at: {pdf_path}")
         
         # Return PDF file
         return FileResponse(
@@ -1507,6 +1510,14 @@ async def download_diploma_pdf(diploma_id: str, user: dict = Depends(get_current
             headers={
                 "Content-Disposition": f'attachment; filename="certificado_{diploma["certificate_id"]}.pdf"'
             }
+        )
+    except Exception as e:
+        logger.error(f"CRITICAL ERROR in download_diploma_pdf: {str(e)}", exc_info=True)
+        import traceback
+        error_details = traceback.format_exc()
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error generating PDF: {str(e)}. Check server logs for details."
         )
     except Exception as e:
         logger.error(f"PDF generation error: {str(e)}")
