@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { QRCodeSVG } from 'qrcode.react';
 import { templatesAPI } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
@@ -47,7 +48,7 @@ const Templates = () => {
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    
+
     try {
       await templatesAPI.delete(deleteId);
       toast.success(t('templates.deleted'));
@@ -113,8 +114,8 @@ const Templates = () => {
       {templates.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map((template) => (
-            <div 
-              key={template.id} 
+            <div
+              key={template.id}
               className="glass-card overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               data-testid={`template-card-${template.id}`}
             >
@@ -134,6 +135,42 @@ const Templates = () => {
                     <Image className="w-16 h-16 text-slate-300 dark:text-slate-600" strokeWidth={1} />
                   </div>
                 )}
+                {/* QR Code previews overlaid on template card */}
+                {(template.fields_config || []).filter(f => f.variable === 'qr_code').map((f, i) => {
+                  // Scale factor: template canvas is 1123x794, card preview uses aspect-[16/11]
+                  // We render as % of the container using relative positions
+                  const cw = template.canvas_width || 1123;
+                  const ch = template.canvas_height || 794;
+                  const size = (f.qrSize || 100);
+                  const leftPct = ((f.x || 0) / cw) * 100;
+                  const topPct = ((f.y || 0) / ch) * 100;
+                  const sizePct = (size / cw) * 100;
+                  const bgColor = f.qrBgColor === 'transparent' ? 'transparent' : (f.qrBgColor || 'transparent');
+                  return (
+                    <div
+                      key={`tcard-qr-${f.id || i}`}
+                      style={{
+                        position: 'absolute',
+                        left: `${leftPct}%`,
+                        top: `${topPct}%`,
+                        width: `${sizePct}%`,
+                        aspectRatio: '1',
+                        background: bgColor,
+                        overflow: 'hidden',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <QRCodeSVG
+                        value="https://orviti.com/verify/DEMO"
+                        size={64}
+                        bgColor={bgColor === 'transparent' ? 'transparent' : bgColor}
+                        fgColor={f.qrColor || '#000000'}
+                        level="L"
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </div>
+                  );
+                })}
                 {/* Overlay with actions */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="absolute top-3 right-3">
@@ -170,8 +207,8 @@ const Templates = () => {
                     </p>
                   </div>
                   <Link to={`/templates/${template.id}/edit`}>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       className="bg-white/50 border-white/40 hover:bg-white/80"
                       data-testid={`edit-template-${template.id}`}

@@ -172,7 +172,7 @@ const ALL_FONTS = Object.values(GOOGLE_FONTS).flat();
 const loadGoogleFont = (fontName) => {
   const formattedName = fontName.replace(/ /g, '+');
   const linkId = `google-font-${formattedName}`;
-  
+
   if (!document.getElementById(linkId)) {
     const link = document.createElement('link');
     link.id = linkId;
@@ -213,7 +213,7 @@ const QRCodePreview = ({ element, onUpdate, canvasRef }) => {
   const cornerStyle = element.qrCornerStyle || 'square';
   const cornerDotStyle = element.qrCornerDotStyle || 'square';
   const bgColor = element.qrBgColor || 'transparent';
-  
+
   const [position, setPosition] = useState({ x: element.x, y: element.y });
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
@@ -334,10 +334,10 @@ const QRCodeElement = ({ element, isSelected, onSelect, onChange }) => {
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
           const newSize = Math.round(size * Math.max(scaleX, scaleY));
-          
+
           node.scaleX(1);
           node.scaleY(1);
-          
+
           onChange({
             ...element,
             x: node.x(),
@@ -433,10 +433,10 @@ const DraggableImage = ({ element, isSelected, onSelect, onChange }) => {
             const node = shapeRef.current;
             const scaleX = node.scaleX();
             const scaleY = node.scaleY();
-            
+
             node.scaleX(1);
             node.scaleY(1);
-            
+
             onChange({
               ...element,
               x: node.x(),
@@ -514,8 +514,8 @@ const DraggableText = ({ element, isSelected, onSelect, onChange }) => {
     }
   }, [isSelected]);
 
-  const displayText = element.type === 'variable' 
-    ? `{${element.variable}}` 
+  const displayText = element.type === 'variable'
+    ? `{${element.variable}}`
     : element.text || 'Text';
 
   return (
@@ -651,7 +651,7 @@ const TemplateBuilder = () => {
 
   const addElement = (type, variable = null) => {
     const isQRCode = variable === 'qr_code';
-    
+
     const newElement = {
       id: `${Date.now()}`,
       type,
@@ -683,11 +683,11 @@ const TemplateBuilder = () => {
 
   const addImageElement = async (file) => {
     if (!file) return;
-    
+
     try {
       const response = await uploadAPI.upload(file);
       const url = `${process.env.REACT_APP_BACKEND_URL}${response.data.url}`;
-      
+
       const newElement = {
         id: `${Date.now()}`,
         type: 'image',
@@ -852,7 +852,10 @@ const TemplateBuilder = () => {
 
         {/* Center - Canvas */}
         <div className="flex-1 bg-muted/50 rounded-lg overflow-auto flex items-center justify-center p-4">
-          <div className="bg-white shadow-xl rounded-lg overflow-hidden" style={{ width: canvasSize.width * 0.7, height: canvasSize.height * 0.7 }}>
+          <div
+            className="bg-white shadow-xl rounded-lg overflow-hidden"
+            style={{ width: canvasSize.width * 0.7, height: canvasSize.height * 0.7, position: 'relative' }}
+          >
             <Stage
               ref={stageRef}
               width={canvasSize.width * 0.7}
@@ -870,7 +873,7 @@ const TemplateBuilder = () => {
                 {!backgroundUrl && (
                   <Rect width={canvasSize.width} height={canvasSize.height} fill="#f8fafc" />
                 )}
-                
+
                 {/* Elements */}
                 {elements.map((element) => (
                   element.type === 'image' ? (
@@ -901,6 +904,48 @@ const TemplateBuilder = () => {
                 ))}
               </Layer>
             </Stage>
+
+            {/* Real QR overlays rendered as HTML over the Konva canvas */}
+            {elements
+              .filter((el) => el.variable === 'qr_code')
+              .map((el) => {
+                const scale = 0.7;
+                const size = (el.qrSize || 100) * scale;
+                const bgColor = el.qrBgColor === 'transparent' ? 'transparent' : (el.qrBgColor || 'transparent');
+                return (
+                  <div
+                    key={`qr-overlay-${el.id}`}
+                    style={{
+                      position: 'absolute',
+                      left: el.x * scale,
+                      top: el.y * scale,
+                      width: size,
+                      height: size,
+                      pointerEvents: 'none', // pass clicks through to Konva
+                      background: bgColor,
+                      borderRadius:
+                        el.qrCornerStyle === 'dot'
+                          ? '50%'
+                          : el.qrCornerStyle === 'rounded'
+                            ? size * 0.1
+                            : 0,
+                      overflow: 'hidden',
+                      opacity: el.opacity || 1,
+                      transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
+                      transformOrigin: 'center center',
+                    }}
+                  >
+                    <QRCodeSVG
+                      value="https://orviti.com/verify/DEMO"
+                      size={size}
+                      bgColor={bgColor === 'transparent' ? 'transparent' : bgColor}
+                      fgColor={el.qrColor || '#000000'}
+                      level={el.qrErrorLevel || 'M'}
+                      style={{ width: '100%', height: '100%', display: 'block' }}
+                    />
+                  </div>
+                );
+              })}
           </div>
         </div>
 
@@ -937,7 +982,7 @@ const TemplateBuilder = () => {
                       />
                     </div>
                   )}
-                  
+
                   {selectedElement.type === 'variable' && (
                     <div className="space-y-2">
                       <Label className="text-xs">Variable</Label>
@@ -963,9 +1008,9 @@ const TemplateBuilder = () => {
                       <div className="space-y-2">
                         <Label className="text-xs">Imagen</Label>
                         <div className="w-full h-24 rounded-lg border border-slate-200 overflow-hidden bg-slate-50">
-                          <img 
-                            src={selectedElement.imageUrl} 
-                            alt="Preview" 
+                          <img
+                            src={selectedElement.imageUrl}
+                            alt="Preview"
                             className="w-full h-full object-contain"
                           />
                         </div>
@@ -1082,12 +1127,12 @@ const TemplateBuilder = () => {
                           data-testid="qr-size-slider"
                         />
                       </div>
-                      
+
                       {/* QR Color */}
                       <div className="space-y-2">
                         <Label className="text-xs">Color del QR</Label>
                         <div className="flex items-center gap-2">
-                          <div 
+                          <div
                             className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer shadow-sm"
                             style={{ backgroundColor: selectedElement.qrColor || '#000000' }}
                             onClick={() => document.getElementById('qr-color-picker').click()}
@@ -1131,19 +1176,19 @@ const TemplateBuilder = () => {
                             <input
                               type="color"
                               value={selectedElement.qrBgCustomColor || '#ffffff'}
-                              onChange={(e) => updateElement({ 
-                                ...selectedElement, 
+                              onChange={(e) => updateElement({
+                                ...selectedElement,
                                 qrBgColor: e.target.value,
-                                qrBgCustomColor: e.target.value 
+                                qrBgCustomColor: e.target.value
                               })}
                               className="w-10 h-10 rounded cursor-pointer"
                             />
                             <Input
                               value={selectedElement.qrBgCustomColor || '#ffffff'}
-                              onChange={(e) => updateElement({ 
-                                ...selectedElement, 
+                              onChange={(e) => updateElement({
+                                ...selectedElement,
                                 qrBgColor: e.target.value,
-                                qrBgCustomColor: e.target.value 
+                                qrBgCustomColor: e.target.value
                               })}
                               className="flex-1 font-mono text-sm"
                             />
@@ -1239,8 +1284,8 @@ const TemplateBuilder = () => {
                                     {category}
                                   </SelectLabel>
                                   {fonts.map((font) => (
-                                    <SelectItem 
-                                      key={font} 
+                                    <SelectItem
+                                      key={font}
                                       value={font}
                                       className="pl-4"
                                       onMouseEnter={() => loadGoogleFont(font)}
