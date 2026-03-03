@@ -84,19 +84,32 @@
             opacity: {{ field.opacity }};
         ">
             {% if field.type == 'qr_code' %}
-            <img class="qr-code" src="{{ field.value }}" alt="QR Code" style="
+            <img class="qr-code" src="{{ field.value | safe }}" alt="QR Code" style="
                 width: {{ field.qrSize or field.width or 100 }}px; 
                 height: {{ field.qrSize or field.height or 100 }}px;
                 background: transparent;
             " />
             {% elif field.type == 'image' %}
-            <img src="{{ field.imageUrl }}" alt="Image" style="
-                width: {{ field.imageWidth or 150 }}px; 
-                height: {{ field.imageHeight or 150 }}px;
-                object-fit: contain;
+            <img class="custom-image" src="{{ field.imageUrl | safe }}" alt="Custom Image" style="
+                width: {{ field.imageWidth or field.width or 150 }}px;
+                height: {{ field.imageHeight or field.height or 150 }}px;
+                opacity: {{ field.opacity or 1 }};
+                transform: rotate({{ field.rotation or 0 }}deg);
             " />
             {% else %}
-            {{ field.value }}
+            <span style="
+                font-family: '{{ field.fontFamily }}', sans-serif;
+                font-size: {{ field.fontSize }}px;
+                color: {{ field.fontColor }};
+                font-weight: {{ 'bold' if field.bold else 'normal' }};
+                font-style: {{ 'italic' if field.italic else 'normal' }};
+                text-decoration: {{ 'underline' if field.underline else 'none' }};
+                text-align: {{ field.align }};
+                opacity: {{ field.opacity }};
+                display: block;
+                width: 100%;
+                transform: rotate({{ field.rotation }}deg);
+            ">{{ field.value | safe }}</span>
             {% endif %}
         </div>
         {% endfor %}

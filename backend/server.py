@@ -954,8 +954,9 @@ async def send_diploma_email(diploma_id: str, user: dict = Depends(get_current_u
     
     # If we have a custom template, prepare the fields
     if template and template.get("fields_config"):
+        # Prepare fields for the template
         fields = []
-        for field_config in template["fields_config"]:
+        for field_config in template.get("fields_config", []):
             field = {
                 "x": field_config.get("x", 0),
                 "y": field_config.get("y", 0),
@@ -974,7 +975,48 @@ async def send_diploma_email(diploma_id: str, user: dict = Depends(get_current_u
             }
             
             variable = field_config.get("variable", "")
-            if variable == "recipient_name":
+            field_type = field_config.get("type", "text")
+
+            # Value mapping logic
+            if field_type == "image":
+                field["type"] = "image"
+                field["imageUrl"] = field_config.get("imageUrl", "")
+                field["imageWidth"] = field_config.get("imageWidth", field_config.get("width", 150))
+                field["imageHeight"] = field_config.get("imageHeight", field_config.get("height", 150))
+                field["value"] = "[image]"
+            elif variable == "qr_code" or field_type == "qr_code":
+                field["type"] = "qr_code"
+                qr_color = field_config.get("qrColor", "#000000")
+                qr_size = field_config.get("qrSize", 100)
+                qr_bg_color = field_config.get("qrBgColor", "transparent")
+                qr_corner_style = field_config.get("qrCornerStyle", "square")
+                qr_dot_style = field_config.get("qrDotStyle", "squares")
+                qr_error_level = field_config.get("qrErrorLevel", "M")
+                
+                frontend_url = os.environ.get('FRONTEND_URL', '').rstrip('/')
+                if not frontend_url:
+                    frontend_url = "https://orviti.com"
+                verification_url = f"{frontend_url}/verify/{diploma['certificate_id']}"
+                
+                qr_value = generate_qr_code(
+                    verification_url, 
+                    fill_color=qr_color, 
+                    back_color=qr_bg_color,
+                    corner_style=qr_corner_style,
+                    dot_style=qr_dot_style,
+                    error_level=qr_error_level,
+                    size=qr_size
+                )
+                
+                if qr_value:
+                    field["value"] = qr_value
+                else:
+                    field["value"] = ""
+
+                field["qrSize"] = qr_size
+                field["width"] = qr_size
+                field["height"] = qr_size
+            elif variable == "recipient_name":
                 field["value"] = diploma["recipient_name"]
             elif variable == "course_name":
                 field["value"] = diploma["course_name"]
@@ -986,32 +1028,6 @@ async def send_diploma_email(diploma_id: str, user: dict = Depends(get_current_u
                 field["value"] = f"{diploma.get('duration_hours', 0)} horas"
             elif variable == "certificate_id":
                 field["value"] = diploma["certificate_id"]
-            elif variable == "qr_code":
-                field["type"] = "qr_code"
-                qr_color = field_config.get("qrColor", "#000000")
-                qr_size = field_config.get("qrSize", 100)
-                qr_bg_color = field_config.get("qrBgColor", "transparent")
-                qr_corner_style = field_config.get("qrCornerStyle", "square")
-                qr_dot_style = field_config.get("qrDotStyle", "squares")
-                qr_error_level = field_config.get("qrErrorLevel", "M")
-                
-                verification_url = f"{os.environ.get('FRONTEND_URL', '')}/verify/{diploma['certificate_id']}"
-
-                field["value"] = generate_qr_code(
-                    verification_url, 
-                    fill_color=qr_color, 
-                    back_color=qr_bg_color,
-                    corner_style=qr_corner_style,
-                    dot_style=qr_dot_style,
-                    error_level=qr_error_level,
-                    size=qr_size
-                )
-                field["qrSize"] = qr_size
-                field["qrColor"] = qr_color
-                field["qrBgColor"] = qr_bg_color
-                field["qrCornerStyle"] = qr_corner_style
-                field["width"] = qr_size
-                field["height"] = qr_size
             elif variable == "organization_name":
                 field["value"] = diploma.get("organization_name", "ORVITI Academy")
             elif field_config.get("text"):
@@ -1019,25 +1035,11 @@ async def send_diploma_email(diploma_id: str, user: dict = Depends(get_current_u
             else:
                 field["value"] = ""
             
-            if field["value"] or field_config.get("type") == "image":
+            if field.get("value"):
                 fields.append(field)
-        
-        for field_config in template["fields_config"]:
-            if field_config.get("type") == "image":
-                field = {
-                    "type": "image",
-                    "x": field_config.get("x", 0),
-                    "y": field_config.get("y", 0),
-                    "imageUrl": field_config.get("imageUrl", ""),
-                    "imageWidth": field_config.get("imageWidth", 150),
-                    "imageHeight": field_config.get("imageHeight", 150),
-                    "rotation": field_config.get("rotation", 0),
-                    "opacity": field_config.get("opacity", 1),
-                }
-                fields.append(field)
-        
-        certificate_data["custom_template"] = True
+
         certificate_data["fields"] = fields
+        certificate_data["custom_template"] = True
         certificate_data["background_image_url"] = template.get("background_image_url", "")
         certificate_data["canvas_width"] = template.get("canvas_width", 1123)
         certificate_data["canvas_height"] = template.get("canvas_height", 794)
@@ -1272,7 +1274,7 @@ async def send_bulk_diploma_emails(data: BulkEmailRequest, user: dict = Depends(
                             field["value"] = f"{diploma.get('duration_hours', 0)} horas"
                         elif variable == "certificate_id":
                             field["value"] = diploma["certificate_id"]
-                        elif variable == "qr_code":
+                        elif variable == "qr_code" or field_config.get("type") == "qr_code":
                             field["type"] = "qr_code"
                             field["value"] = diploma["qr_code_url"]
                             field["qrSize"] = field_config.get("qrSize", 100)
@@ -1470,7 +1472,7 @@ async def download_diploma_pdf(diploma_id: str, user: dict = Depends(get_current
                 field["value"] = f"{diploma.get('duration_hours', 0)} horas"
             elif variable == "certificate_id":
                 field["value"] = diploma["certificate_id"]
-            elif variable == "qr_code":
+            elif variable == "qr_code" or field_config.get("type") == "qr_code":
                 field["type"] = "qr_code"
                 qr_color = field_config.get("qrColor", "#000000")
                 qr_size = field_config.get("qrSize", 100)
@@ -1509,21 +1511,6 @@ async def download_diploma_pdf(diploma_id: str, user: dict = Depends(get_current
             
             # Add field if it has content (text/qr) or is an image
             if field["value"] or field_config.get("type") == "image":
-                fields.append(field)
-        
-        # Also add image elements (they don't have a variable)
-        for field_config in template["fields_config"]:
-            if field_config.get("type") == "image":
-                field = {
-                    "type": "image",
-                    "x": field_config.get("x", 0),
-                    "y": field_config.get("y", 0),
-                    "imageUrl": field_config.get("imageUrl", ""),
-                    "imageWidth": field_config.get("imageWidth", 150),
-                    "imageHeight": field_config.get("imageHeight", 150),
-                    "rotation": field_config.get("rotation", 0),
-                    "opacity": field_config.get("opacity", 1),
-                }
                 fields.append(field)
         
         certificate_data["custom_template"] = True
@@ -1661,7 +1648,7 @@ async def download_diploma_pdf_public(certificate_id: str):
                 field["value"] = f"{diploma.get('duration_hours', 0)} horas"
             elif variable == "certificate_id":
                 field["value"] = diploma["certificate_id"]
-            elif variable == "qr_code":
+            elif variable == "qr_code" or field_config.get("type") == "qr_code":
                 field["type"] = "qr_code"
                 qr_color = field_config.get("qrColor", "#000000")
                 qr_size = field_config.get("qrSize", 100)
@@ -1700,21 +1687,6 @@ async def download_diploma_pdf_public(certificate_id: str):
             
             # Add field if it has content (text/qr) or is an image
             if field["value"] or field_config.get("type") == "image":
-                fields.append(field)
-        
-        # Also add image elements (they don't have a variable)
-        for field_config in template["fields_config"]:
-            if field_config.get("type") == "image":
-                field = {
-                    "type": "image",
-                    "x": field_config.get("x", 0),
-                    "y": field_config.get("y", 0),
-                    "imageUrl": field_config.get("imageUrl", ""),
-                    "imageWidth": field_config.get("imageWidth", 150),
-                    "imageHeight": field_config.get("imageHeight", 150),
-                    "rotation": field_config.get("rotation", 0),
-                    "opacity": field_config.get("opacity", 1),
-                }
                 fields.append(field)
         
         certificate_data["custom_template"] = True
