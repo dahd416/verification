@@ -1602,6 +1602,127 @@ async def debug_qr_generation():
             "elapsed_seconds": elapsed
         }
 
+@api_router.get("/diplomas/{diploma_id}/debug-html")
+async def debug_diploma_html(diploma_id: str, user: dict = Depends(get_current_user)):
+    """Return the raw HTML that would be sent to Playwright for a diploma.
+    Useful for debugging rendering issues."""
+    from jinja2 import Environment, FileSystemLoader
+    from pathlib import Path
+    import json
+
+    diploma = await db.diplomas.find_one(
+        {"id": diploma_id, "organization_id": user["organization_id"]},
+        {"_id": 0}
+    )
+    if not diploma:
+        raise HTTPException(status_code=404, detail="Diploma not found")
+
+    template_doc = await db.templates.find_one(
+        {"id": diploma.get("template_id")},
+        {"_id": 0}
+    )
+
+    issue_date = datetime.fromisoformat(diploma["issued_at"].replace("Z", "+00:00"))
+    formatted_date = issue_date.strftime("%d de %B, %Y")
+
+    certificate_data = {
+        "recipient_name": diploma["recipient_name"],
+        "course_name": diploma["course_name"],
+        "organization_name": diploma.get("organization_name", "ORVITI Academy"),
+        "instructor": diploma.get("instructor", ""),
+        "duration_hours": diploma.get("duration_hours", 0),
+        "issue_date": formatted_date,
+        "certificate_id": diploma["certificate_id"],
+        "qr_code_url": diploma.get("qr_code_url", ""),
+    }
+
+    fields_summary = []
+    if template_doc and template_doc.get("fields_config"):
+        fields = []
+        for field_config in template_doc.get("fields_config", []):
+            variable = field_config.get("variable", "")
+            field_type = field_config.get("type", "text")
+            field = {
+                "x": field_config.get("x", 0),
+                "y": field_config.get("y", 0),
+                "width": field_config.get("width"),
+                "height": field_config.get("height"),
+                "fontFamily": field_config.get("fontFamily", "Urbanist"),
+                "fontSize": field_config.get("fontSize", 24),
+                "fontColor": field_config.get("fontColor", "#000000"),
+                "bold": field_config.get("bold", False),
+                "italic": field_config.get("italic", False),
+                "underline": field_config.get("underline", False),
+                "align": field_config.get("align", "left"),
+                "rotation": field_config.get("rotation", 0),
+                "opacity": field_config.get("opacity", 1),
+                "type": field_type,
+            }
+
+            if field_type == "image":
+                field["type"] = "image"
+                field["imageUrl"] = field_config.get("imageUrl", "")
+                field["imageWidth"] = field_config.get("imageWidth", field_config.get("width", 150))
+                field["imageHeight"] = field_config.get("imageHeight", field_config.get("height", 150))
+                field["value"] = "[image]"
+            elif variable == "qr_code" or field_type == "qr_code":
+                field["type"] = "qr_code"
+                frontend_url = os.environ.get('FRONTEND_URL', '').rstrip('/')
+                if not frontend_url:
+                    frontend_url = "https://orviti.com"
+                verification_url = f"{frontend_url}/verify/{diploma['certificate_id']}"
+                qr_value = generate_qr_code(verification_url)
+                field["value"] = qr_value
+                field["qrSize"] = field_config.get("qrSize", 100)
+                field["width"] = field["qrSize"]
+                field["height"] = field["qrSize"]
+            elif variable == "recipient_name":
+                field["value"] = diploma["recipient_name"]
+            elif variable == "course_name":
+                field["value"] = diploma["course_name"]
+            elif variable in ("completion_date", "issue_date"):
+                field["value"] = formatted_date
+            elif variable == "instructor_name":
+                field["value"] = diploma.get("instructor", "")
+            elif variable == "duration_hours":
+                field["value"] = f"{diploma.get('duration_hours', 0)} horas"
+            elif variable == "certificate_id":
+                field["value"] = diploma["certificate_id"]
+            elif variable == "organization_name":
+                field["value"] = diploma.get("organization_name", "ORVITI Academy")
+            elif field_config.get("text"):
+                field["value"] = field_config["text"]
+            else:
+                field["value"] = ""
+
+            fields_summary.append({
+                "variable": variable,
+                "type": field.get("type"),
+                "has_value": bool(field.get("value")),
+                "value_length": len(field.get("value", "")) if field.get("value") else 0,
+                "value_preview": str(field.get("value", ""))[:80],
+            })
+
+            if field.get("value"):
+                fields.append(field)
+
+        certificate_data["custom_template"] = True
+        certificate_data["fields"] = fields
+        certificate_data["background_image_url"] = template_doc.get("background_image_url", "")
+        certificate_data["canvas_width"] = template_doc.get("canvas_width", 1123)
+        certificate_data["canvas_height"] = template_doc.get("canvas_height", 794)
+
+    # Return summary instead of full HTML (too large for JSON)
+    return {
+        "diploma_id": diploma_id,
+        "template_found": template_doc is not None,
+        "template_id": diploma.get("template_id"),
+        "fields_in_template": len(template_doc.get("fields_config", [])) if template_doc else 0,
+        "fields_processed": len(fields_summary),
+        "fields_summary": fields_summary,
+        "uses_custom_template": certificate_data.get("custom_template", False),
+    }
+
 @api_router.get("/diplomas/by-certificate/{certificate_id}/download-pdf")
 async def download_diploma_pdf_public(certificate_id: str):
     """Generate and download diploma as PDF (public endpoint for verification page)"""
