@@ -1646,6 +1646,22 @@ async def debug_playwright(user: dict = Depends(get_current_user)):
         }
 
 
+@api_router.get("/debug/settings")
+async def debug_settings():
+    """Debug: show raw settings from DB and what the public endpoint returns after URL rewriting"""
+    raw = await db.settings.find_one({}, {"_id": 0})
+    return {
+        "raw_db_document": raw,
+        "fields": {
+            "login_logo_url": raw.get("login_logo_url") if raw else None,
+            "sidebar_logo_url": raw.get("sidebar_logo_url") if raw else None,
+            "favicon_url": raw.get("favicon_url") if raw else None,
+            "site_title": raw.get("site_title") if raw else None,
+        },
+        "s3_configured": bool(S3_BUCKET),
+        "s3_endpoint": S3_ENDPOINT_URL or "(not set)",
+    }
+
 @api_router.get("/debug/qr")
 async def debug_qr_generation():
     """Test QR code generation"""
