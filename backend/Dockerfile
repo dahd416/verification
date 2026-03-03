@@ -26,9 +26,14 @@ RUN playwright install --with-deps chromium
 # Copy project
 COPY . .
 
+# Create persistent directories
+RUN mkdir -p /app/backend/uploads /app/backend/generated_pdfs
+
+# Declare persistent volumes — mount these in Easypanel to survive deployments
+VOLUME ["/app/backend/uploads", "/app/backend/generated_pdfs"]
+
 # Expose port
 EXPOSE 80
 
 # Command to run the application
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "80"]
-
