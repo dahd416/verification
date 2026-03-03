@@ -632,57 +632,63 @@ def generate_qr_code(
     error_map = {'L': 'L', 'M': 'M', 'Q': 'Q', 'H': 'H'}
     error = error_map.get(error_level, 'M')
     
-    # Create QR code with segno
-    qr = segno.make(verification_url, error=error)
-    
-    # For SVG output with styling
-    buffer = BytesIO()
-    
-    # Determine border radius based on corner_style
+    # Try using segno for styled SVG first if rounded is requested
     if corner_style == 'rounded':
-        # Use segno's SVG output with custom styling
-        qr.save(
-            buffer, 
-            kind='svg',
-            scale=4,
-            dark=fill_color,
-            light=back_color if back_color != 'transparent' else None,
-            quiet_zone=2
-        )
-        buffer.seek(0)
-        svg_content = buffer.read().decode('utf-8')
-        
-        # Modify SVG to add rounded corners to modules
-        if dot_style == 'dots':
-            # Replace rectangles with circles
-            svg_content = svg_content.replace('width="4" height="4"', 'width="4" height="4" rx="2" ry="2"')
-        elif dot_style == 'rounded':
-            # Add slight rounding
-            svg_content = svg_content.replace('width="4" height="4"', 'width="4" height="4" rx="1" ry="1"')
-        
-        return f"data:image/svg+xml;base64,{base64.b64encode(svg_content.encode()).decode()}"
-    else:
-        # Standard PNG output with qrcode library for more control
-        qr_img = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=getattr(qrcode.constants, f'ERROR_CORRECT_{error}'))
+        try:
+            qr = segno.make(verification_url, error=error)
+            buffer = BytesIO()
+            qr.save(
+                buffer, 
+                kind='svg',
+                scale=4,
+                dark=fill_color,
+                light=back_color if back_color != 'transparent' else None,
+                quiet_zone=2
+            )
+            buffer.seek(0)
+            svg_content = buffer.read().decode('utf-8')
+            
+            # Modify SVG to add rounded corners to modules
+            if dot_style == 'dots':
+                svg_content = svg_content.replace('width="4" height="4"', 'width="4" height="4" rx="2" ry="2"')
+            elif dot_style == 'rounded':
+                svg_content = svg_content.replace('width="4" height="4"', 'width="4" height="4" rx="1" ry="1"')
+            
+            return f"data:image/svg+xml;base64,{base64.b64encode(svg_content.encode()).decode()}"
+        except Exception as e:
+            logger.error(f"Segno rounded QR generation failed: {e}")
+            # Fall through to standard PNG
+    
+    # Standard PNG output with qrcode library
+    try:
+        err_corr = getattr(qrcode.constants, f'ERROR_CORRECT_{error}', qrcode.constants.ERROR_CORRECT_M)
+        qr_img = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=err_corr)
         qr_img.add_data(verification_url)
         qr_img.make(fit=True)
         
-        # Handle transparent background
+        def parse_color(color_hex):
+            if not color_hex or not color_hex.startswith('#'):
+                return (0, 0, 0)
+            try:
+                c = color_hex.lstrip('#')
+                if len(c) == 3:
+                    c = ''.join([char*2 for char in c])
+                if len(c) == 6:
+                    return tuple(int(c[i:i+2], 16) for i in (0, 2, 4))
+                return (0, 0, 0)
+            except:
+                return (0, 0, 0)
+
         if back_color == "transparent":
             img = qr_img.make_image(fill_color=fill_color, back_color="white").convert('RGBA')
             datas = img.getdata()
             new_data = []
+            rgb_fill = parse_color(fill_color)
             for item in datas:
                 if item[0] > 240 and item[1] > 240 and item[2] > 240:
                     new_data.append((255, 255, 255, 0))
                 else:
-                    if fill_color.startswith('#'):
-                        r = int(fill_color[1:3], 16)
-                        g = int(fill_color[3:5], 16)
-                        b = int(fill_color[5:7], 16)
-                        new_data.append((r, g, b, 255))
-                    else:
-                        new_data.append(item)
+                    new_data.append((*rgb_fill, 255))
             img.putdata(new_data)
         else:
             img = qr_img.make_image(fill_color=fill_color, back_color=back_color)
@@ -690,8 +696,10 @@ def generate_qr_code(
         buffer = BytesIO()
         img.save(buffer, format='PNG')
         buffer.seek(0)
-        
         return f"data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode()}"
+    except Exception as e:
+        logger.error(f"QR generation final failure: {e}")
+        return ""
 
 @api_router.post("/diplomas/generate")
 async def generate_diplomas(data: DiplomaCreate, user: dict = Depends(get_current_user)):
