@@ -640,7 +640,8 @@ const TemplateBuilder = () => {
 
     try {
       const response = await uploadAPI.upload(file);
-      const url = `${process.env.REACT_APP_BACKEND_URL}${response.data.url}`;
+      const rawUrl = response.data.url;
+      const url = rawUrl.startsWith('http') ? rawUrl : `${process.env.REACT_APP_BACKEND_URL}${rawUrl}`;
       setBackgroundUrl(url);
       toast.success('Background uploaded');
     } catch (error) {
@@ -686,7 +687,8 @@ const TemplateBuilder = () => {
 
     try {
       const response = await uploadAPI.upload(file);
-      const url = `${process.env.REACT_APP_BACKEND_URL}${response.data.url}`;
+      const rawUrl = response.data.url;
+      const url = rawUrl.startsWith('http') ? rawUrl : `${process.env.REACT_APP_BACKEND_URL}${rawUrl}`;
 
       const newElement = {
         id: `${Date.now()}`,
@@ -1024,7 +1026,8 @@ const TemplateBuilder = () => {
                             if (file) {
                               try {
                                 const response = await uploadAPI.upload(file);
-                                const url = `${process.env.REACT_APP_BACKEND_URL}${response.data.url}`;
+                                const rawUrl = response.data.url;
+                                const url = rawUrl.startsWith('http') ? rawUrl : `${process.env.REACT_APP_BACKEND_URL}${rawUrl}`;
                                 updateElement({ ...selectedElement, imageUrl: url });
                                 toast.success('Imagen actualizada');
                               } catch (error) {

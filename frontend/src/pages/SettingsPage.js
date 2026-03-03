@@ -76,12 +76,15 @@ const SettingsPage = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const response = await axios.post(`${API}/api/upload`, formData, {
         headers: { ...getAuthHeader(), 'Content-Type': 'multipart/form-data' }
       });
-      
-      const fullUrl = `${API}${response.data.url}`;
+
+      const rawUrl = response.data.url;
+      // If the URL is already absolute (S3/MinIO), use it directly.
+      // Only prepend API base for local relative paths like /api/uploads/...
+      const fullUrl = rawUrl.startsWith('http') ? rawUrl : `${API}${rawUrl}`;
       setSettings({ ...settings, [field]: fullUrl });
       toast.success(t('settings.uploaded'));
     } catch (error) {
@@ -97,7 +100,7 @@ const SettingsPage = () => {
     try {
       await axios.put(`${API}/api/settings`, settings, { headers: getAuthHeader() });
       toast.success(t('settings.saved'));
-      
+
       // Update page title immediately
       if (settings.site_title) {
         document.title = settings.site_title;
@@ -122,7 +125,7 @@ const SettingsPage = () => {
       toast.error(t('settings.emailConfigRequired'));
       return;
     }
-    
+
     setTesting(true);
     try {
       await axios.post(`${API}/api/settings/test-email`, {}, { headers: getAuthHeader() });
