@@ -2563,7 +2563,6 @@ async def test_email_connection(user: dict = Depends(get_current_user)):
 @api_router.get("/settings/public")
 async def get_public_settings():
     """Get public settings (for login page without auth)"""
-    # Get the first organization's settings (for single-tenant setup)
     settings = await db.settings.find_one({}, {"_id": 0})
     if not settings:
         return {
@@ -2573,6 +2572,31 @@ async def get_public_settings():
             "site_title": "ORVITI Academy",
             "site_description": "Sistema de Gestión de Diplomas Digitales"
         }
+
+    # Rewrite MinIO direct URLs → backend proxy
+    # This fixes logos uploaded before the proxy was implemented
+    def rewrite_to_proxy(url: str) -> str:
+        if not url:
+            return url
+        if not url.startswith('http'):
+            return url  # already relative, frontend will resolve it
+        # If it's pointing to our MinIO endpoint, convert to proxy
+        if S3_ENDPOINT_URL and S3_ENDPOINT_URL in url:
+            # Extract the object key: remove scheme+host+bucket prefix
+            import urllib.parse
+            parsed = urllib.parse.urlparse(url)
+            # path is like /bucket-name/uploads/file.ext
+            path = parsed.path.lstrip('/')
+            parts = path.split('/', 1)
+            if len(parts) == 2:
+                key = parts[1]  # everything after the bucket name
+                return f"/api/media/{key}"
+        return url
+
+    settings['login_logo_url'] = rewrite_to_proxy(settings.get('login_logo_url', ''))
+    settings['sidebar_logo_url'] = rewrite_to_proxy(settings.get('sidebar_logo_url', ''))
+    settings['favicon_url'] = rewrite_to_proxy(settings.get('favicon_url', ''))
+
     return settings
 
 # ==================== EMAIL TEMPLATES ====================
