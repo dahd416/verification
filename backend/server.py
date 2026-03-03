@@ -625,30 +625,52 @@ def generate_qr_code(
     error_level: str = "M",
     size: int = 100
 ) -> str:
-    """Generate QR code with custom styling using segno for SVG output"""
-    import segno
+    """Generate QR code with custom styling using segno or qrcode"""
+    import base64
+    from io import BytesIO
     
+    # Ensure verification_url is not empty
+    if not verification_url:
+        logger.warning("Empty verification URL for QR code, using fallback")
+        verification_url = "https://orviti.com"
+
     # Map error level
     error_map = {'L': 'L', 'M': 'M', 'Q': 'Q', 'H': 'H'}
     error = error_map.get(error_level, 'M')
     
-    # Try using segno for styled SVG first if rounded is requested
-    if corner_style == 'rounded':
+    # Sanitize colors - must be HEX for many operations or valid color names
+    def sanitize_color(c, default="#000000"):
+        if not c: return default
+        if c == "transparent": return "transparent"
+        if c.startswith("#") and len(c) in [4, 7]: return c
+        # If it's a name but not a hex, we'll try it as is but it might fail in PIL
+        return c
+
+    fill_color = sanitize_color(fill_color, "#000000")
+    back_color = sanitize_color(back_color, "transparent")
+    
+    # Try using segno for styled SVG if requested
+    if corner_style == 'rounded' or dot_style in ['dots', 'rounded']:
         try:
+            import segno
             qr = segno.make(verification_url, error=error)
             buffer = BytesIO()
+            
+            # Segno uses None for transparent background
+            qr_back = None if back_color == "transparent" else back_color
+            
             qr.save(
                 buffer, 
                 kind='svg',
                 scale=4,
                 dark=fill_color,
-                light=back_color if back_color != 'transparent' else None,
+                light=qr_back,
                 quiet_zone=2
             )
             buffer.seek(0)
             svg_content = buffer.read().decode('utf-8')
             
-            # Modify SVG to add rounded corners to modules
+            # Apply rounded corners via SVG manipulation if requested
             if dot_style == 'dots':
                 svg_content = svg_content.replace('width="4" height="4"', 'width="4" height="4" rx="2" ry="2"')
             elif dot_style == 'rounded':
@@ -656,50 +678,63 @@ def generate_qr_code(
             
             return f"data:image/svg+xml;base64,{base64.b64encode(svg_content.encode()).decode()}"
         except Exception as e:
-            logger.error(f"Segno rounded QR generation failed: {e}")
-            # Fall through to standard PNG
+            logger.warning(f"Segno QR generation failed, falling back to standard: {e}")
     
     # Standard PNG output with qrcode library
     try:
+        import qrcode
+        from PIL import Image
+        
         err_corr = getattr(qrcode.constants, f'ERROR_CORRECT_{error}', qrcode.constants.ERROR_CORRECT_M)
         qr_img = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=err_corr)
         qr_img.add_data(verification_url)
         qr_img.make(fit=True)
         
-        def parse_color(color_hex):
-            if not color_hex or not color_hex.startswith('#'):
-                return (0, 0, 0)
+        def hex_to_rgb(h, default=(0, 0, 0)):
+            if not h or not h.startswith('#'):
+                # Try to handle some common names or just return default
+                names = {"black": (0,0,0), "white": (255,255,255), "red": (255,0,0)}
+                return names.get(h.lower(), default)
             try:
-                c = color_hex.lstrip('#')
-                if len(c) == 3:
-                    c = ''.join([char*2 for char in c])
-                if len(c) == 6:
-                    return tuple(int(c[i:i+2], 16) for i in (0, 2, 4))
-                return (0, 0, 0)
+                h = h.lstrip('#')
+                if len(h) == 3: h = ''.join([c*2 for c in h])
+                return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
             except:
-                return (0, 0, 0)
+                return default
 
+        # Handle transparency
         if back_color == "transparent":
+            # Generate black on white, then swap white for transparent
             img = qr_img.make_image(fill_color=fill_color, back_color="white").convert('RGBA')
             datas = img.getdata()
             new_data = []
-            rgb_fill = parse_color(fill_color)
+            rgb_fill = hex_to_rgb(fill_color)
+            
             for item in datas:
-                if item[0] > 240 and item[1] > 240 and item[2] > 240:
+                # If pixel is white/near-white, make it transparent
+                if item[0] > 220 and item[1] > 220 and item[2] > 220:
                     new_data.append((255, 255, 255, 0))
                 else:
                     new_data.append((*rgb_fill, 255))
             img.putdata(new_data)
         else:
-            img = qr_img.make_image(fill_color=fill_color, back_color=back_color)
+            img = qr_img.make_image(fill_color=fill_color, back_color=back_color).convert('RGB')
         
         buffer = BytesIO()
         img.save(buffer, format='PNG')
         buffer.seek(0)
         return f"data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode()}"
     except Exception as e:
-        logger.error(f"QR generation final failure: {e}")
-        return ""
+        logger.error(f"Critical QR generation failure: {e}")
+        # Absolute fallback: simplest possible QR black/white
+        try:
+            import qrcode
+            img = qrcode.make(verification_url)
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+            return f"data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode()}"
+        except:
+            return "" # Last resort
 
 @api_router.post("/diplomas/generate")
 async def generate_diplomas(data: DiplomaCreate, user: dict = Depends(get_current_user)):
@@ -1444,8 +1479,11 @@ async def download_diploma_pdf(diploma_id: str, user: dict = Depends(get_current
                 qr_dot_style = field_config.get("qrDotStyle", "squares")
                 qr_error_level = field_config.get("qrErrorLevel", "M")
                 
-                # Generate QR with custom styling
-                verification_url = f"{os.environ.get('FRONTEND_URL', '')}/verify/{diploma['certificate_id']}"
+                # Ensure FRONTEND_URL is a full URL
+                frontend_url = os.environ.get('FRONTEND_URL', '').rstrip('/')
+                if not frontend_url:
+                    frontend_url = "https://orviti.com"
+                verification_url = f"{frontend_url}/verify/{diploma['certificate_id']}"
 
                 field["value"] = generate_qr_code(
                     verification_url, 
@@ -1632,8 +1670,11 @@ async def download_diploma_pdf_public(certificate_id: str):
                 qr_dot_style = field_config.get("qrDotStyle", "squares")
                 qr_error_level = field_config.get("qrErrorLevel", "M")
                 
-                # Generate QR with custom styling
-                verification_url = f"{os.environ.get('FRONTEND_URL', '')}/verify/{diploma['certificate_id']}"
+                # Ensure FRONTEND_URL is a full URL
+                frontend_url = os.environ.get('FRONTEND_URL', '').rstrip('/')
+                if not frontend_url:
+                    frontend_url = "https://orviti.com"
+                verification_url = f"{frontend_url}/verify/{diploma['certificate_id']}"
 
                 field["value"] = generate_qr_code(
                     verification_url, 
