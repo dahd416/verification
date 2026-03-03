@@ -61,15 +61,31 @@ const Layout = ({ children }) => {
         const response = await axios.get(`${API}/api/settings`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setSettings(response.data);
+        const data = response.data;
+
+        // Normalize relative /api/... paths to absolute URLs
+        const resolveUrl = (url) => {
+          if (!url) return url;
+          if (url.startsWith('http')) return url;
+          return `${API}${url}`;
+        };
+
+        const normalized = {
+          ...data,
+          login_logo_url: resolveUrl(data.login_logo_url),
+          sidebar_logo_url: resolveUrl(data.sidebar_logo_url),
+          favicon_url: resolveUrl(data.favicon_url),
+        };
+        setSettings(normalized);
+
         // Update document title and favicon
-        if (response.data.site_title) {
-          document.title = response.data.site_title;
+        if (data.site_title) {
+          document.title = data.site_title;
         }
-        if (response.data.favicon_url) {
+        if (normalized.favicon_url) {
           const link = document.querySelector("link[rel~='icon']") || document.createElement('link');
           link.rel = 'icon';
-          link.href = response.data.favicon_url;
+          link.href = normalized.favicon_url;
           document.head.appendChild(link);
         }
       }
@@ -127,7 +143,7 @@ const Layout = ({ children }) => {
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
-              
+
               return (
                 <Tooltip key={item.path}>
                   <TooltipTrigger asChild>
@@ -145,15 +161,15 @@ const Layout = ({ children }) => {
                 </Tooltip>
               );
             })}
-            
+
             {/* Divider */}
             <div className="w-8 h-px bg-slate-200 dark:bg-slate-700 my-2" />
-            
+
             {/* Admin Items */}
             {adminItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
-              
+
               return (
                 <Tooltip key={item.path}>
                   <TooltipTrigger asChild>
@@ -210,13 +226,13 @@ const Layout = ({ children }) => {
                 </TooltipContent>
               </Tooltip>
               <DropdownMenuContent side="right" align="end" className="glass-card border-white/40">
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => changeLanguage('es')}
                   className={i18n.language === 'es' ? 'bg-indigo-50 text-indigo-600' : ''}
                 >
                   Espanol
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => changeLanguage('en')}
                   className={i18n.language === 'en' ? 'bg-indigo-50 text-indigo-600' : ''}
                 >
@@ -302,9 +318,8 @@ const Layout = ({ children }) => {
 
         {/* Mobile Sidebar */}
         <aside
-          className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 glass-sidebar transform transition-transform duration-300 ease-out ${
-            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+          className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 glass-sidebar transform transition-transform duration-300 ease-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
         >
           <div className="h-16 flex items-center justify-between px-4 border-b border-white/20">
             <Link to="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
@@ -330,42 +345,40 @@ const Layout = ({ children }) => {
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
-              
+
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    isActive
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/50'
-                  }`}
+                    }`}
                 >
                   <Icon className="h-5 w-5" strokeWidth={1.5} />
                   <span className="font-medium">{item.label}</span>
                 </Link>
               );
             })}
-            
+
             {/* Divider */}
             <div className="h-px bg-slate-200 dark:bg-slate-700 my-3" />
-            
+
             {/* Admin Items */}
             {adminItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
-              
+
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    isActive
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/50'
-                  }`}
+                    }`}
                 >
                   <Icon className="h-5 w-5" strokeWidth={1.5} />
                   <span className="font-medium">{item.label}</span>

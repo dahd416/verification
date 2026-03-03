@@ -37,14 +37,14 @@ const VerifyPage = () => {
     const wasDark = document.documentElement.classList.contains('dark');
     document.documentElement.classList.remove('dark');
     document.documentElement.style.colorScheme = 'light';
-    
+
     // Fetch public settings for logo
     fetchPublicSettings();
-    
+
     if (certificateId) {
       verifyDiploma();
     }
-    
+
     // Cleanup: restore dark mode preference when leaving
     return () => {
       document.documentElement.style.colorScheme = '';
@@ -55,10 +55,44 @@ const VerifyPage = () => {
     };
   }, [certificateId]);
 
+  const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+
+  // Normalize URLs stored in DB: relative /api/... paths need the backend base
+  const resolveUrl = (url) => {
+    if (!url) return url;
+    if (url.startsWith('http')) return url;   // already absolute (MinIO, CDN, etc.)
+    return `${API_BASE}${url}`;               // relative → absolute
+  };
+
   const fetchPublicSettings = async () => {
     try {
       const response = await settingsAPI.getPublic();
-      setSettings(response.data);
+      const data = response.data;
+
+      // Normalize URLs
+      const normalized = {
+        ...data,
+        login_logo_url: resolveUrl(data.login_logo_url),
+        sidebar_logo_url: resolveUrl(data.sidebar_logo_url),
+        favicon_url: resolveUrl(data.favicon_url),
+      };
+      setSettings(normalized);
+
+      // Apply favicon dynamically
+      if (normalized.favicon_url) {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = normalized.favicon_url;
+      }
+
+      // Apply site title
+      if (data.site_title) {
+        document.title = data.site_title;
+      }
     } catch (err) {
       console.error('Failed to fetch settings:', err);
     }
@@ -84,7 +118,7 @@ const VerifyPage = () => {
     setDownloading(true);
     try {
       const response = await diplomasAPI.downloadPdfPublic(certificateId);
-      
+
       // Create blob and download
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
@@ -95,7 +129,7 @@ const VerifyPage = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       toast.success(t('diplomas.downloadSuccess'));
     } catch (error) {
       console.error('Download error:', error);
@@ -153,7 +187,7 @@ const VerifyPage = () => {
             </Button>
           </a>
         </div>
-        
+
         {/* Footer */}
         <footer className="fixed bottom-0 left-0 right-0 border-t border-slate-200/50 bg-white/70 backdrop-blur-xl">
           <div className="max-w-4xl mx-auto px-4 py-6 text-center text-sm text-slate-500">
@@ -177,9 +211,9 @@ const VerifyPage = () => {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <a href="https://orviti.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
             {settings?.login_logo_url ? (
-              <img 
-                src={settings.login_logo_url} 
-                alt="ORVITI" 
+              <img
+                src={settings.login_logo_url}
+                alt="ORVITI"
                 className="h-10 max-w-[200px] object-contain"
               />
             ) : (
@@ -202,11 +236,10 @@ const VerifyPage = () => {
         {/* Status Banner */}
         <div className={`bg-white/80 backdrop-blur-xl rounded-2xl border shadow-xl p-6 mb-8 ${isValid ? 'border-emerald-200' : 'border-red-200'}`}>
           <div className="flex items-center gap-4">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${
-              isValid 
-                ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/30' 
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${isValid
+                ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/30'
                 : 'bg-gradient-to-br from-red-400 to-rose-500 shadow-red-500/30'
-            }`}>
+              }`}>
               {isValid ? (
                 <ShieldCheck className="w-8 h-8 text-white" strokeWidth={1.5} />
               ) : (
@@ -228,7 +261,7 @@ const VerifyPage = () => {
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/40 shadow-xl overflow-hidden">
           {/* Gradient accent bar */}
           <div className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
-          
+
           <div className="p-6 md:p-8">
             <div className="grid md:grid-cols-3 gap-6 md:gap-8">
               {/* Left: Certificate Info */}
@@ -330,8 +363,8 @@ const VerifyPage = () => {
         <div className="mt-8 text-center space-y-4">
           {/* Download PDF Button - only for valid certificates */}
           {isValid && (
-            <Button 
-              onClick={handleDownloadPdf} 
+            <Button
+              onClick={handleDownloadPdf}
               className="btn-gradient"
               disabled={downloading}
               data-testid="download-pdf-btn"
@@ -344,7 +377,7 @@ const VerifyPage = () => {
               {t('diplomas.downloadPdf')}
             </Button>
           )}
-          
+
           <p className="text-sm text-slate-500">
             {t('verify.issuedByOrviti')}
           </p>
