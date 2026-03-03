@@ -641,10 +641,9 @@ def generate_qr_code(
         import qrcode
         from PIL import Image as PILImage
 
-        # Normalize fill_color
+        # Normalize fill_color - if caller passes transparent/empty, default to black
         qr_fill = fill_color if fill_color and fill_color not in ("", "transparent") else "#000000"
-        qr_back = back_color if back_color and back_color not in ("", "transparent") else "white"
-        use_transparency = (back_color == "transparent" or back_color == "")
+        use_transparency = (back_color in ("transparent", "", None))
 
         qr = qrcode.QRCode(
             version=None,
@@ -655,37 +654,64 @@ def generate_qr_code(
         qr.add_data(verification_url)
         qr.make(fit=True)
 
-        # qrcode v7+ returns a PilImage wrapper; call .get_image() or use it directly
-        pil_img_wrapper = qr.make_image(fill_color=qr_fill, back_color="white")
-        
-        # Get underlying PIL image - different qrcode versions handle this differently
+        # Use a sentinel magenta background so that we can safely erase ONLY
+        # the background without touching the QR modules (even if they're white)
+        SENTINEL_BACK = "#FF00FF"
+        pil_img_wrapper = qr.make_image(fill_color=qr_fill, back_color=SENTINEL_BACK)
+
+        # Get underlying PIL image
         if hasattr(pil_img_wrapper, 'to_image'):
             raw_img = pil_img_wrapper.to_image()
         elif hasattr(pil_img_wrapper, '_img'):
             raw_img = pil_img_wrapper._img
         else:
-            # Direct save without converting
+            # Fallback: direct save
             buf = BytesIO()
             pil_img_wrapper.save(buf)
             buf.seek(0)
-            data_url = f"data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}"
-            logger.info(f"QR code generated via qrcode wrapper save (len={len(data_url)})")
-            return data_url
+            if not use_transparency:
+                data_url = f"data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}"
+                logger.info(f"QR generated via wrapper save (len={len(data_url)})")
+                return data_url
+            raw_img = PILImage.open(buf)
 
         if use_transparency:
-            # Convert to RGBA and make white pixels transparent
+            # Erase only the sentinel magenta pixels → make them transparent
             rgba_img = raw_img.convert("RGBA")
             data = rgba_img.getdata()
             new_data = []
             for item in data:
-                if item[0] > 240 and item[1] > 240 and item[2] > 240:
+                r, g, b = item[0], item[1], item[2]
+                # Near-magenta: high red, high blue, low green
+                if r > 200 and b > 200 and g < 50:
                     new_data.append((255, 255, 255, 0))  # transparent
                 else:
-                    new_data.append((item[0], item[1], item[2], 255))
+                    new_data.append((r, g, b, 255))      # keep opaque
             rgba_img.putdata(new_data)
             final_img = rgba_img
         else:
-            final_img = raw_img.convert("RGB")
+            # Replace sentinel magenta with the actual requested background color
+            qr_back = back_color if back_color and back_color not in ("", "transparent") else "#ffffff"
+            rgb_img = raw_img.convert("RGBA")
+            data = rgb_img.getdata()
+            # Parse qr_back to RGB tuple
+            def hex_to_rgb(h):
+                h = h.lstrip("#")
+                if len(h) == 3: h = "".join(c*2 for c in h)
+                try:
+                    return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+                except:
+                    return (255, 255, 255)
+            br, bg, bb = hex_to_rgb(qr_back)
+            new_data = []
+            for item in data:
+                r, g, b = item[0], item[1], item[2]
+                if r > 200 and b > 200 and g < 50:
+                    new_data.append((br, bg, bb, 255))
+                else:
+                    new_data.append((r, g, b, 255))
+            rgb_img.putdata(new_data)
+            final_img = rgb_img.convert("RGB")
 
         buffer = BytesIO()
         final_img.save(buffer, format="PNG")
