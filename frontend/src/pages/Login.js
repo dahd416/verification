@@ -29,18 +29,30 @@ const Login = () => {
     checkFirstUser();
   }, []);
 
+  const resolveUrl = (url) => {
+    if (!url) return url;
+    if (url.startsWith('http')) return url;
+    return `${API}${url}`;
+  };
+
   const fetchSettings = async () => {
     try {
       const response = await axios.get(`${API}/api/settings/public`);
-      setSettings(response.data);
-      // Update page title and favicon if settings exist
-      if (response.data.site_title) {
-        document.title = response.data.site_title;
+      const data = response.data;
+      const normalized = {
+        ...data,
+        login_logo_url: resolveUrl(data.login_logo_url),
+        sidebar_logo_url: resolveUrl(data.sidebar_logo_url),
+        favicon_url: resolveUrl(data.favicon_url),
+      };
+      setSettings(normalized);
+      if (data.site_title) {
+        document.title = data.site_title;
       }
-      if (response.data.favicon_url) {
+      if (normalized.favicon_url) {
         const link = document.querySelector("link[rel~='icon']") || document.createElement('link');
         link.rel = 'icon';
-        link.href = response.data.favicon_url;
+        link.href = normalized.favicon_url;
         document.head.appendChild(link);
       }
     } catch (error) {
@@ -88,8 +100,8 @@ const Login = () => {
         {/* Logo & Header */}
         <div className="text-center mb-8 animate-fade-in-up">
           {settings?.login_logo_url ? (
-            <img 
-              src={settings.login_logo_url} 
+            <img
+              src={settings.login_logo_url}
               alt={siteTitle}
               className="max-h-24 mx-auto mb-6 object-contain"
               data-testid="login-logo"
@@ -161,8 +173,8 @@ const Login = () => {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full btn-gradient h-12 text-base"
               disabled={loading}
               data-testid="login-submit"

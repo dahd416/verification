@@ -237,8 +237,8 @@ const VerifyPage = () => {
         <div className={`bg-white/80 backdrop-blur-xl rounded-2xl border shadow-xl p-6 mb-8 ${isValid ? 'border-emerald-200' : 'border-red-200'}`}>
           <div className="flex items-center gap-4">
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${isValid
-                ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/30'
-                : 'bg-gradient-to-br from-red-400 to-rose-500 shadow-red-500/30'
+              ? 'bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/30'
+              : 'bg-gradient-to-br from-red-400 to-rose-500 shadow-red-500/30'
               }`}>
               {isValid ? (
                 <ShieldCheck className="w-8 h-8 text-white" strokeWidth={1.5} />
@@ -393,7 +393,7 @@ const VerifyPage = () => {
       {/* Footer */}
       <footer className="border-t border-slate-200/50 bg-white/70 backdrop-blur-xl mt-auto">
         <div className="max-w-4xl mx-auto px-4 py-6 text-center text-sm text-slate-500">
-          © {currentYear} ORVITI. {t('verify.allRightsReserved')}
+          © {currentYear} {settings?.site_title || 'ORVITI'}. {t('verify.allRightsReserved')}
         </div>
       </footer>
     </div>
