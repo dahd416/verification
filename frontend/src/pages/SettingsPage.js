@@ -43,23 +43,30 @@ const SettingsPage = () => {
     fetchSettings();
   }, []);
 
+  const resolveUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `${API}${url}`;
+  };
+
   const fetchSettings = async () => {
     try {
       const response = await axios.get(`${API}/api/settings`, { headers: getAuthHeader() });
+      const d = response.data;
       setSettings({
-        login_logo_url: response.data.login_logo_url || '',
-        sidebar_logo_url: response.data.sidebar_logo_url || '',
-        favicon_url: response.data.favicon_url || '',
-        site_title: response.data.site_title || '',
-        site_description: response.data.site_description || '',
+        login_logo_url: resolveUrl(d.login_logo_url),
+        sidebar_logo_url: resolveUrl(d.sidebar_logo_url),
+        favicon_url: resolveUrl(d.favicon_url),
+        site_title: d.site_title || '',
+        site_description: d.site_description || '',
         // Email settings
-        email_enabled: response.data.email_enabled || false,
-        smtp_host: response.data.smtp_host || 'smtp.gmail.com',
-        smtp_port: response.data.smtp_port || '587',
-        smtp_user: response.data.smtp_user || '',
-        smtp_password: response.data.smtp_password || '',
-        smtp_from_name: response.data.smtp_from_name || '',
-        smtp_from_email: response.data.smtp_from_email || '',
+        email_enabled: d.email_enabled || false,
+        smtp_host: d.smtp_host || 'smtp.gmail.com',
+        smtp_port: d.smtp_port || '587',
+        smtp_user: d.smtp_user || '',
+        smtp_password: d.smtp_password || '',
+        smtp_from_name: d.smtp_from_name || '',
+        smtp_from_email: d.smtp_from_email || '',
       });
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -82,10 +89,19 @@ const SettingsPage = () => {
       });
 
       const rawUrl = response.data.url;
-      // If the URL is already absolute (S3/MinIO), use it directly.
-      // Only prepend API base for local relative paths like /api/uploads/...
-      const fullUrl = rawUrl.startsWith('http') ? rawUrl : `${API}${rawUrl}`;
-      setSettings({ ...settings, [field]: fullUrl });
+      // For display: resolve to absolute URL
+      const displayUrl = rawUrl.startsWith('http') ? rawUrl : `${API}${rawUrl}`;
+      // For DB storage: keep the relative path (portable across domains)
+      const dbUrl = rawUrl;
+
+      // Update local state for immediate visual feedback
+      setSettings(prev => ({ ...prev, [field]: displayUrl }));
+
+      // Auto-save this field to the database immediately
+      await axios.put(`${API}/api/settings`, { [field]: dbUrl }, {
+        headers: getAuthHeader()
+      });
+
       toast.success(t('settings.uploaded'));
     } catch (error) {
       console.error('Upload error:', error);
