@@ -123,7 +123,7 @@ const Templates = () => {
               <div className="aspect-[16/11] bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 relative overflow-hidden">
                 {template.background_image_url ? (
                   <img
-                    src={template.background_image_url}
+                    src={template.background_image_url.startsWith('http') ? template.background_image_url : `${process.env.REACT_APP_BACKEND_URL}${template.background_image_url}`}
                     alt={template.name}
                     className="absolute inset-0 w-full h-full object-cover"
                     onError={(e) => {

@@ -586,13 +586,26 @@ const TemplateBuilder = () => {
     }
   }, [id]);
 
+  const resolveUrl = (url) => {
+    if (!url) return url;
+    if (url.startsWith('http')) return url;
+    return `${process.env.REACT_APP_BACKEND_URL}${url}`;
+  };
+
   const fetchTemplate = async () => {
     try {
       const response = await templatesAPI.getById(id);
       const template = response.data;
       setTemplateName(template.name);
-      setBackgroundUrl(template.background_image_url);
-      setElements(template.fields_config || []);
+      setBackgroundUrl(resolveUrl(template.background_image_url));
+      // Resolve image URLs in elements too
+      const resolvedElements = (template.fields_config || []).map(el => {
+        if (el.type === 'image' && el.imageUrl) {
+          return { ...el, imageUrl: resolveUrl(el.imageUrl) };
+        }
+        return el;
+      });
+      setElements(resolvedElements);
     } catch (error) {
       console.error('Failed to fetch template:', error);
       toast.error('Failed to load template');
