@@ -703,21 +703,57 @@ const TemplateBuilder = () => {
       const rawUrl = response.data.url;
       const url = rawUrl.startsWith('http') ? rawUrl : `${process.env.REACT_APP_BACKEND_URL}${rawUrl}`;
 
-      const newElement = {
-        id: `${Date.now()}`,
-        type: 'image',
-        x: canvasSize.width / 2 - 75,
-        y: canvasSize.height / 2 - 75,
-        imageUrl: url,
-        imageWidth: 150,
-        imageHeight: 150,
-        rotation: 0,
-        opacity: 1,
-      };
+      // Load the image to get its natural dimensions
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const naturalW = img.naturalWidth;
+        const naturalH = img.naturalHeight;
+        const MAX_SIZE = 300; // max width or height on the canvas
 
-      setElements([...elements, newElement]);
-      setSelectedId(newElement.id);
-      toast.success('Imagen agregada');
+        let w, h;
+        if (naturalW >= naturalH) {
+          w = Math.min(naturalW, MAX_SIZE);
+          h = (naturalH / naturalW) * w;
+        } else {
+          h = Math.min(naturalH, MAX_SIZE);
+          w = (naturalW / naturalH) * h;
+        }
+
+        const newElement = {
+          id: `${Date.now()}`,
+          type: 'image',
+          x: canvasSize.width / 2 - w / 2,
+          y: canvasSize.height / 2 - h / 2,
+          imageUrl: url,
+          imageWidth: Math.round(w),
+          imageHeight: Math.round(h),
+          rotation: 0,
+          opacity: 1,
+        };
+
+        setElements(prev => [...prev, newElement]);
+        setSelectedId(newElement.id);
+        toast.success('Imagen agregada');
+      };
+      img.onerror = () => {
+        // Fallback: use 150x150 if image can't be loaded
+        const newElement = {
+          id: `${Date.now()}`,
+          type: 'image',
+          x: canvasSize.width / 2 - 75,
+          y: canvasSize.height / 2 - 75,
+          imageUrl: url,
+          imageWidth: 150,
+          imageHeight: 150,
+          rotation: 0,
+          opacity: 1,
+        };
+        setElements(prev => [...prev, newElement]);
+        setSelectedId(newElement.id);
+        toast.success('Imagen agregada');
+      };
+      img.src = url;
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Error al subir imagen');
