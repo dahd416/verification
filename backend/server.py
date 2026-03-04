@@ -2506,7 +2506,16 @@ async def get_settings(user: dict = Depends(get_current_user)):
 @api_router.put("/settings")
 async def update_settings(data: SettingsUpdate, user: dict = Depends(get_current_user)):
     """Update organization settings"""
-    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    URL_FIELDS = {"login_logo_url", "sidebar_logo_url", "favicon_url"}
+    
+    update_data = {}
+    for k, v in data.dict().items():
+        if v is None:
+            continue  # skip unset optional fields
+        if k in URL_FIELDS and v == "":
+            continue  # don't overwrite existing URL with empty string
+        update_data[k] = v
+
     update_data["organization_id"] = user["organization_id"]
     
     await db.settings.update_one(
